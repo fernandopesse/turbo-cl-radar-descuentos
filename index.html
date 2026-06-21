@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Turbo CL · Radar de Descuentos (en vivo)</title>
+<style>
+:root{
+  --turbo-violet: #5B2A9D;
+  --turbo-violet-deep: #2E0F5C;
+  --turbo-yellow: #FFD23F;
+  --turbo-yellow-deep: #E8B500;
+  --ink: #181221;
+  --paper: #FAF7FF;
+  --paper-dim: #F0EAFB;
+  --line: #DDD0F2;
+  --line-soft: #EBE3FA;
+  --ok: #1F9E64;
+  --ok-bg: #E3F7EC;
+  --warn: #C9821A;
+  --warn-bg: #FCF0DA;
+  --bad: #D43D3D;
+  --bad-bg: #FBE5E5;
+  --mute: #6E6480;
+  --fire: #FF5A36;
+  --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  --display: 'Space Grotesk', 'Arial Black', sans-serif;
+  --body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+
+body{
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============ HERO ============ */
+.hero{
+  background: linear-gradient(160deg, var(--turbo-violet-deep) 0%, var(--turbo-violet) 62%, #7A3FC4 100%);
+  color: white;
+  padding: 38px 28px 30px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before{
+  content:'';
+  position:absolute;
+  top:-60px; right:-60px;
+  width:280px; height:280px;
+  background: radial-gradient(circle, rgba(255,210,63,0.35) 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero::after{
+  content:'';
+  position:absolute;
+  bottom:-100px; left:20%;
+  width:340px; height:340px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+.hero-mark{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.bolt{
+  width: 26px; height: 26px;
+  flex-shrink:0;
+}
+.eyebrow{
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--turbo-yellow);
+  font-weight: 600;
+}
+h1{
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(28px, 4.2vw, 44px);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  max-width: 680px;
+}
+h1 em{
+  font-style: normal;
+  color: var(--turbo-yellow);
+}
+.hero-sub{
+  max-width: 540px;
+  margin-top: 10px;
+  color: rgba(255,255,255,0.78);
+  font-size: 14.5px;
+}
+.hero-meta{
+  text-align:right;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.7;
+  white-space: nowrap;
+}
+.hero-meta b{ color: white; }
+
+/* KPI strip */
+.kpi-row{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
+  gap: 1px;
+  background: rgba(255,255,255,0.14);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-top: 26px;
+  position: relative;
+  z-index: 1;
+  border: 1px solid rgba(255,255,255,0.14);
+}
+.kpi{
+  background: rgba(255,255,255,0.06);
+  padding: 14px 18px;
+}
+.kpi-val{
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.kpi-val.yellow{ color: var(--turbo-yellow); }
+.kpi-label{
+  font-size: 11px;
+  color: rgba(255,255,255,0.62);
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============ LIVE DATA: refresh control + loading/error banner ============ */
+.refresh-row{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  margin-top: 16px;
+  position: relative;
+  z-index: 1;
+  flex-wrap: wrap;
+}
+.refresh-btn{
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--turbo-violet-deep);
+  background: var(--turbo-yellow);
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.refresh-btn:hover:not(:disabled){ transform: translateY(-1px); }
+.refresh-btn:disabled{ opacity: 0.6; cursor: default; }
+.refresh-hint{
+  font-size: 11.5px;
+  color: rgba(255,255,255,0.6);
+}
+
+.load-status{
+  display:none;
+  align-items:center;
+  gap: 10px;
+  background: var(--paper-dim);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 28px;
+  font-size: 12.5px;
+  color: var(--turbo-violet-deep);
+  font-family: var(--mono);
+}
+.load-status.load-status-error{
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+.load-spinner{
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  border: 2px solid rgba(91,42,157,0.25);
+  border-top-color: var(--turbo-violet);
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+.load-status-error .load-spinner{ display:none; }
+@keyframes spin{ to{ transform: rotate(360deg); } }
+.retry-btn{
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--bad);
+  background: white;
+  border: 1px solid var(--bad);
+  padding: 3px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+/* ============ MAIN LAYOUT ============ */
+.shell{
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 26px 28px 70px;
+}
+
+/* ============ RANKING / SPOTLIGHT ============ */
+.section-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.section-title{
+  font-family: var(--display);
+  font-size: 19px;
+  font-weight: 700;
+  display:flex;
+  align-items:center;
+  gap: 8px;
+}
+.section-note{
+  font-size: 12.5px;
+  color: var(--mute);
+}
+
+.spotlight-scroll{
+  display:flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 14px;
+  margin-bottom: 8px;
+  scroll-snap-type: x proximity;
+}
+.spotlight-scroll::-webkit-scrollbar{ height: 6px; }
+.spotlight-scroll::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 4px; }
+
+.spot-card{
+  scroll-snap-align: start;
+  flex: 0 0 240px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+.spot-card:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px -10px rgba(91,42,157,0.35);
+  border-color: var(--turbo-violet);
+}
+.spot-card:focus-visible{
+  outline: 2px solid var(--turbo-violet);
+  outline-offset: 2px;
+}
+.spot-rank{
+  position:absolute; top:12px; right:14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--mute);
+}
+.spot-disc{
+  font-family: var(--display);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--fire);
+  line-height: 1;
+}
+.spot-disc.high{ color: var(--fire); }
+.spot-disc.mid{ color: var(--turbo-violet); }
+.spot-tag{
+  display:inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 2px 7px;
+  border-radius: 5px;
+  margin-top: 6px;
+}
+.spot-tag.fire{ background: #FFE9E2; color: var(--fire); }
+.spot-tag.star{ background: var(--paper-dim); color: var(--turbo-violet); }
+.spot-name{
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 10px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.spot-maker{
+  font-size: 11.5px;
+  color: var(--mute);
+  margin-top: 4px;
+}
+.spot-campaign{
+  font-size: 11px;
+  color: var(--turbo-violet);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  font-weight: 600;
+}
+
+/* ============ CONTROLS ============ */
+.panel{
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  margin-top: 28px;
+  overflow: hidden;
+}
+.controls{
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line-soft);
+  display:flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items:center;
+  background: var(--paper-dim);
+}
+.search-box{
+  position:relative;
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+.search-box input{
+  width:100%;
+  padding: 9px 12px 9px 34px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-family: var(--body);
+  background: white;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-box input:focus{ border-color: var(--turbo-violet); }
+.search-box svg{
+  position:absolute; left:11px; top:50%; transform:translateY(-50%);
+  width:15px; height:15px;
+  color: var(--mute);
+}
+select, .chip-select{
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font-size: 13px;
+  font-family: var(--body);
+  background: white;
+  color: var(--ink);
+  cursor:pointer;
+  outline:none;
+}
+select:focus{ border-color: var(--turbo-violet); }
+#campaignFilter{ max-width: 220px; }
+
+.disc-slider-wrap{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--mute);
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 7px 12px;
+}
+.disc-slider-wrap input[type=range]{
+  width: 110px;
+  accent-color: var(--turbo-violet);
+}
+.disc-slider-wrap b{ color: var(--ink); min-width: 30px; }
+
+.code-select-wrap{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--mute);
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 7px 12px;
+}
+.code-select-wrap select{
+  border: none;
+  padding: 0;
+  background: transparent;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--turbo-violet);
+}
+
+.toggle-btns{
+  display:flex;
+  gap: 6px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 3px;
+}
+.toggle-btns button{
+  border:none;
+  background: transparent;
+  padding: 6px 11px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-family: var(--body);
+  font-weight: 600;
+  color: var(--mute);
+  cursor:pointer;
+  transition: all 0.12s;
+}
+.toggle-btns button.active{
+  background: var(--turbo-violet);
+  color: white;
+}
+
+.reset-btn{
+  border:none;
+  background: white;
+  border: 1px solid var(--line);
+  padding: 9px 13px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--mute);
+  cursor:pointer;
+  font-family: var(--body);
+}
+.reset-btn:hover{ color: var(--bad); border-color: var(--bad); }
+
+.result-bar{
+  padding: 10px 20px;
+  font-size: 12px;
+  color: var(--mute);
+  font-family: var(--mono);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap: 8px;
+}
+.result-bar b{ color: var(--ink); }
+
+/* ============ TABLE ============ */
+.table-wrap{
+  overflow-x: auto;
+}
+table{
+  width:100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+thead th{
+  position: sticky; top:0;
+  background: var(--ink);
+  color: white;
+  text-align:left;
+  padding: 10px 14px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space:nowrap;
+  cursor:pointer;
+  user-select:none;
+}
+thead th:hover{ background: #2c2238; }
+thead th .arrow{ opacity:0.5; margin-left: 4px; font-size:9px; }
+thead th.active-sort .arrow{ opacity: 1; color: var(--turbo-yellow); }
+
+tbody tr{
+  border-bottom: 1px solid var(--line-soft);
+  transition: background 0.1s;
+}
+tbody tr:hover{ background: var(--paper-dim); }
+tbody td{
+  padding: 9px 14px;
+  white-space:nowrap;
+}
+td.product-cell{
+  white-space:normal;
+  max-width: 260px;
+  min-width: 180px;
+  font-weight: 500;
+}
+td.campaign-cell{
+  white-space:normal;
+  max-width: 200px;
+  min-width: 140px;
+  color: var(--turbo-violet);
+  font-weight: 600;
+  font-size: 12.5px;
+}
+td.mono{ font-family: var(--mono); font-size: 11.5px; color: var(--mute); }
+td.num{ font-family: var(--mono); text-align:right; }
+
+.disc-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 3px 9px;
+  border-radius: 7px;
+}
+.disc-pill.t-fire{ background: #FFE9E2; color: var(--fire); }
+.disc-pill.t-star{ background: var(--paper-dim); color: var(--turbo-violet); }
+.disc-pill.t-base{ background: #F2F2F4; color: var(--ink); }
+
+.status-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space:nowrap;
+}
+.status-badge::before{
+  content:'';
+  width:6px; height:6px;
+  border-radius:50%;
+  flex-shrink:0;
+}
+.status-badge.s-ok{ background: var(--ok-bg); color: var(--ok); }
+.status-badge.s-ok::before{ background: var(--ok); }
+.status-badge.s-warn{ background: var(--warn-bg); color: var(--warn); }
+.status-badge.s-warn::before{ background: var(--warn); }
+.status-badge.s-bad{ background: var(--bad-bg); color: var(--bad); }
+.status-badge.s-bad::before{ background: var(--bad); }
+.status-badge.s-mute{ background: #EFEFF2; color: var(--mute); }
+.status-badge.s-mute::before{ background: var(--mute); }
+
+.match-flag{
+  font-size: 11px;
+  font-weight: 700;
+}
+.match-flag.match-ok{ color: var(--ok); }
+.match-flag.match-bad{ color: var(--bad); }
+.match-flag.match-na{ color: var(--mute); font-weight:400; }
+
+.empty-state{
+  text-align:center;
+  padding: 60px 20px;
+  color: var(--mute);
+}
+.empty-state .big{
+  font-family: var(--display);
+  font-size: 20px;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+/* pagination */
+.pager{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: 6px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--line-soft);
+}
+.pager button{
+  border:1px solid var(--line);
+  background:white;
+  padding: 6px 11px;
+  border-radius: 7px;
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor:pointer;
+  color: var(--ink);
+}
+.pager button:hover:not(:disabled){ border-color: var(--turbo-violet); color: var(--turbo-violet); }
+.pager button:disabled{ opacity:0.35; cursor:default; }
+.pager .pageinfo{
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--mute);
+  margin: 0 8px;
+}
+
+/* ============ ROADMAP / FASE 2 NOTE ============ */
+.roadmap{
+  margin-top: 28px;
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  padding: 20px 22px;
+  background: linear-gradient(180deg, white, var(--paper-dim));
+  display:flex;
+  gap: 16px;
+  align-items:flex-start;
+}
+.roadmap-icon{
+  width: 38px; height:38px;
+  border-radius: 10px;
+  background: var(--turbo-violet-deep);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.roadmap h3{
+  font-family: var(--display);
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.roadmap p{
+  font-size: 12.5px;
+  color: var(--mute);
+  max-width: 640px;
+}
+.roadmap-tag{
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--turbo-violet);
+  background: var(--paper-dim);
+  border: 1px solid var(--line);
+  padding: 2px 8px;
+  border-radius: 5px;
+  margin-bottom: 6px;
+  display:inline-block;
+}
+
+footer{
+  text-align:center;
+  padding: 26px 20px 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--mute);
+}
+
+/* ============ DETAIL MODAL ============ */
+.detail-overlay{
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(24, 18, 33, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.detail-overlay.open{ display: flex; }
+
+.detail-modal{
+  background: white;
+  border-radius: 18px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 86vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 30px 60px -20px rgba(24,18,33,0.4);
+}
+
+.detail-close{
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--paper-dim);
+  color: var(--mute);
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 1;
+}
+.detail-close:hover{ background: var(--line); color: var(--ink); }
+
+.detail-header{
+  background: linear-gradient(160deg, var(--turbo-violet-deep), var(--turbo-violet));
+  color: white;
+  padding: 26px 26px 20px;
+  border-radius: 18px 18px 0 0;
+}
+.detail-disc{
+  font-family: var(--display);
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--turbo-yellow);
+  line-height: 1;
+}
+.detail-product{
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 8px;
+  line-height: 1.25;
+}
+.detail-maker-campaign{
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.78);
+  margin-top: 6px;
+}
+
+.detail-body{
+  padding: 20px 26px 26px;
+}
+.detail-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.detail-field{
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.detail-field-label{
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mute);
+  margin-bottom: 4px;
+}
+.detail-field-val{
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.detail-field-val.mono{ font-family: var(--mono); font-size: 12.5px; font-weight: 500; }
+
+.detail-section-title{
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--turbo-violet);
+  margin: 18px 0 8px;
+}
+.detail-codes{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.detail-code-box{
+  background: var(--paper-dim);
+  border-radius: 9px;
+  padding: 9px 10px;
+  text-align: center;
+}
+.detail-code-label{
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--mute);
+  text-transform: uppercase;
+}
+.detail-code-val{
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 3px;
+  word-break: break-all;
+}
+
+@media (max-width: 600px){
+  .detail-grid{ grid-template-columns: 1fr; }
+  .detail-codes{ grid-template-columns: 1fr; }
+}
+
+/* responsive */
+@media (max-width: 720px){
+  .hero{ padding: 28px 18px 24px; }
+  .hero-top{ flex-direction:column; }
+  .hero-meta{ text-align:left; }
+  .shell{ padding: 20px 14px 50px; }
+  .kpi-row{ grid-template-columns: repeat(2,1fr); }
+  td.product-cell{ min-width: 140px; }
+}
+
+::selection{ background: var(--turbo-yellow); color: var(--ink); }
+
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-top">
+    <div>
+      <div class="hero-mark">
+        <svg class="bolt" viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14H11L10 22L20 9H13L13 2Z" fill="#FFD23F" stroke="#FFD23F" stroke-width="1" stroke-linejoin="round"/></svg>
+        <span class="eyebrow">Turbo Chile · Comercial</span>
+      </div>
+      <h1>Radar de descuentos <em>orgánicos</em></h1>
+      <p class="hero-sub">Vista unificada del calendario comercial 2026: detecta de un vistazo qué campañas traen el descuento más fuerte, quién las financia y si ya quedaron cargadas en sistema.</p>
+    </div>
+    <div class="hero-meta" id="heroMeta">
+      Cargando datos…
+    </div>
+  </div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="refresh-row">
+    <button id="refreshBtn" class="refresh-btn">⟳ Actualizar datos</button>
+    <span class="refresh-hint">Datos en vivo desde Google Sheets · requiere cuenta @rappi.com con acceso</span>
+  </div>
+</header>
+
+<div id="loadStatus" class="load-status">
+  <span class="load-spinner"></span>
+  <span class="load-status-text">Cargando promociones desde Google Sheets…</span>
+</div>
+
+<main class="shell">
+
+  <section>
+    <div class="section-head">
+      <div class="section-title" id="spotlightTitle">🔥 Top descuentos del semestre</div>
+      <div class="section-note" id="spotlightNote">Las 12 promos con mayor % de descuento final activo</div>
+    </div>
+    <div class="spotlight-scroll" id="spotlight"></div>
+  </section>
+
+  <section class="panel">
+    <div class="controls">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar producto, EAN, Sync, Content Portal ID, maker o campaña…">
+      </div>
+
+      <select id="yearFilter">
+        <option value="">Todos los años</option>
+      </select>
+
+      <select id="quarterFilter">
+        <option value="">Todos los trimestres</option>
+      </select>
+
+      <select id="monthFilter">
+        <option value="">Todos los meses</option>
+      </select>
+
+      <select id="makerFilter">
+        <option value="">Todos los makers</option>
+      </select>
+
+      <select id="campaignFilter">
+        <option value="">Todas las campañas</option>
+      </select>
+
+      <select id="statusFilter">
+        <option value="">Todos los estados</option>
+      </select>
+
+      <div class="code-select-wrap">
+        <label for="codeFieldSelect">Código:</label>
+        <select id="codeFieldSelect">
+          <option value="ean">EAN</option>
+          <option value="sync">Sync</option>
+          <option value="productId">Content Portal ID</option>
+        </select>
+      </div>
+
+      <div class="disc-slider-wrap">
+        Desc. mín. <input type="range" id="discSlider" min="0" max="75" value="0" step="1"> <b id="discSliderVal">0%</b>
+      </div>
+
+      <div class="toggle-btns" id="sortToggle">
+        <button data-sort="discountPct" class="active">Más llamativo</button>
+        <button data-sort="endDate">Vence pronto</button>
+        <button data-sort="campaign">A–Z campaña</button>
+      </div>
+
+      <button class="reset-btn" id="resetBtn">↺ Limpiar filtros</button>
+    </div>
+
+    <div class="result-bar">
+      <span><b id="resultCount">0</b> promos encontradas</span>
+      <span id="resultHint"></span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-col="status">Carga <span class="arrow">▾</span></th>
+            <th data-col="campaign">Campaña <span class="arrow">▾</span></th>
+            <th data-col="maker">Maker <span class="arrow">▾</span></th>
+            <th data-col="productName">Producto <span class="arrow">▾</span></th>
+            <th data-col="ean" id="codeColHeader">EAN <span class="arrow">▾</span></th>
+            <th data-col="startDate">Inicio <span class="arrow">▾</span></th>
+            <th data-col="endDate">Fin <span class="arrow">▾</span></th>
+            <th data-col="discountPct">% Desc. final <span class="arrow">▾</span></th>
+            <th data-col="cargaTotalPct">Carga (maker+turbo) <span class="arrow">▾</span></th>
+            <th data-col="match">Match</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="big">Sin resultados</div>
+        <div>Prueba ajustando los filtros o el texto de búsqueda.</div>
+      </div>
+    </div>
+
+    <div class="pager" id="pager"></div>
+  </section>
+
+  <div class="roadmap">
+    <div class="roadmap-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFD23F" stroke-width="2"><path d="M13 2L4 14H11L10 22L20 9H13L13 2Z"/></svg>
+    </div>
+    <div>
+      <span class="roadmap-tag">Próxima fase</span>
+      <h3>Cruce contra promociones cargadas en WMS</h3>
+      <p>Esta primera versión confirma lo <b>planificado</b> en el calendario comercial. El siguiente paso conecta cada fila contra el sistema WMS para verificar automáticamente si el descuento llegó a tienda con el mismo % pactado, marcando desvíos en tiempo real en vez de depender solo del estado "Carga" declarado en el calendario.</p>
+    </div>
+  </div>
+
+  <footer>
+    Fuente: Google Sheets en vivo (calendario comercial TURBO CL) — pestañas Supply_Data 2026_Q1Q2 y Supply_Data_2026_Q3Q4 · Generado para uso interno
+  </footer>
+</main>
+
+<div id="detailOverlay" class="detail-overlay" aria-hidden="true">
+  <div class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+    <button id="detailCloseBtn" class="detail-close" aria-label="Cerrar">✕</button>
+    <div id="detailModalBody"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// LIVE DATA LOADER — reads pre-cleaned JSON from a Google Apps Script Web App
+// (see appsscript/Code.gs) instead of fetching raw CSV from Sheets directly.
+//
+// Why Apps Script and not gviz/tq or "Publicar en la web":
+// - "Publicar en la web" CSV is always public to anyone with the link — can't
+//   restrict to the rappi.com domain.
+// - gviz/tq respects sheet permissions, but rejects cross-origin fetch() calls
+//   from any page that isn't on a Google-trusted origin (confirmed: blocked
+//   even from a Google Sites embed, which runs on a googleusercontent.com
+//   sandboxed subdomain).
+// - An Apps Script Web App deployed with "Execute as: me" + "Who has access:
+//   Anyone in [rappi.com]" supports normal cross-origin fetch() AND still
+//   requires the visitor to be signed in with an @rappi.com account that has
+//   access to the underlying sheet.
+//
+// Column selection, discount % normalization, date parsing, and EAN/SYNC/ID
+// formatting all happen server-side in Code.gs. This file only does maker /
+// campaign casing normalization, which operates on the combined dataset.
+// ============================================================================
+
+// ---- CONFIG ----
+// Paste the Apps Script Web App URL here after deploying Code.gs
+// (Implementar → Nueva implementación → Aplicación web → copiar URL, termina en /exec)
+const APPS_SCRIPT_URL = 'https://script.google.com/a/macros/rappi.com/s/AKfycbwXbU9sYTYwsk9eiB2nDTAXtD-zmQwHUbtGeujDEw02nzQX3_-FmiyrbxL0PCYtF8vK1w/exec';
+
+// ---------------------------------------------------------------------------
+// Maker / campaign casing normalization — same heuristic used in the offline
+// extract.py pipeline: if a well-formed (Title Case) variant already exists
+// among the duplicates, use it; otherwise generate Title Case ourselves,
+// keeping Spanish connector words lowercase. Real acronyms that only ever
+// appear ALL CAPS (CCU, HBC, VSPT...) are left untouched.
+// ---------------------------------------------------------------------------
+const LOWER_WORDS = new Set(['y','de','del','la','el','los','las','en','con','para','a','al','o']);
+
+function smartTitleCase(s){
+  return s.split(' ').map((w, i) => {
+    if(!w) return w;
+    const core = w.replace(/[()]/g, '');
+    if(LOWER_WORDS.has(core.toLowerCase()) && i !== 0) return w.toLowerCase();
+    const lw = w.toLowerCase();
+    return lw.length ? lw[0].toUpperCase() + lw.slice(1) : lw;
+  }).join(' ');
+}
+
+function looksWellFormed(v){
+  if(v === v.toUpperCase() || v === v.toLowerCase()) return false;
+  const words = v.split(' ').filter(w => /[a-zA-ZÀ-ÿ]/.test(w));
+  return words.every(w => {
+    const core = w.replace(/[()]/g, '');
+    return core.length === 0 || /[A-ZÀ-Þ]/.test(core[0]);
+  });
+}
+
+function pickCanonical(variants){
+  if(variants.length === 1) return variants[0];
+  const wellFormed = variants.filter(looksWellFormed);
+  const pool = wellFormed.length ? wellFormed : variants;
+  const best = [...pool].sort((a,b) => b.length - a.length)[0];
+  return wellFormed.length ? best : smartTitleCase(best);
+}
+
+function buildCanonMap(values){
+  const groups = new Map();
+  values.forEach(v => {
+    if(!v) return;
+    const key = v.toLowerCase();
+    if(!groups.has(key)) groups.set(key, new Set());
+    groups.get(key).add(v);
+  });
+  const out = {};
+  groups.forEach((set, key) => {
+    out[key] = pickCanonical([...set].sort());
+  });
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// JSONP loader. Apps Script Web Apps don't send Access-Control-Allow-Origin,
+// so fetch() gets blocked by the browser regardless of origin (confirmed via
+// live testing: fails identically from file://, http://localhost, and a
+// Google Sites embed). A <script src="..."> tag isn't subject to CORS, so we
+// ask Apps Script to wrap its JSON response in a callback() call instead.
+//
+// Trade-off: we lose visibility into HTTP status codes and response bodies
+// that fetch() gave us, so we can no longer distinguish "needs login" from
+// "no permission" from "wrong URL" by inspecting the response — we can only
+// tell whether the script tag loaded successfully (callback fired) or not
+// (onerror fired, or it silently never called back, e.g. because Google
+// served an HTML login page that isn't valid JS and threw a parse error).
+// ---------------------------------------------------------------------------
+let jsonpCounter = 0;
+
+function jsonpRequest(baseUrl, timeoutMs){
+  return new Promise((resolve, reject) => {
+    const callbackName = `__turboRadarJsonp${Date.now()}_${jsonpCounter++}`;
+    const script = document.createElement('script');
+    let settled = false;
+
+    const cleanup = () => {
+      delete window[callbackName];
+      if(script.parentNode) script.parentNode.removeChild(script);
+      clearTimeout(timer);
+    };
+
+    const timer = setTimeout(() => {
+      if(settled) return;
+      settled = true;
+      cleanup();
+      reject(new Error('needs-login-or-unreachable'));
+    }, timeoutMs || 30000);
+
+    window[callbackName] = (payload) => {
+      if(settled) return;
+      settled = true;
+      cleanup();
+      resolve(payload);
+    };
+
+    script.onerror = () => {
+      if(settled) return;
+      settled = true;
+      cleanup();
+      reject(new Error('script-load-error'));
+    };
+
+    const sep = baseUrl.includes('?') ? '&' : '?';
+    script.src = `${baseUrl}${sep}callback=${callbackName}`;
+    document.head.appendChild(script);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Main loader
+// ---------------------------------------------------------------------------
+async function loadLiveData(){
+  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.startsWith('PASTE_')){
+    throw new Error('Falta configurar APPS_SCRIPT_URL en loader.js.');
+  }
+
+  let payload;
+  try{
+    payload = await jsonpRequest(APPS_SCRIPT_URL);
+  } catch(err){
+    if(err.message === 'needs-login-or-unreachable'){
+      throw new Error('No se pudo cargar la hoja en vivo (sin respuesta en 30 segundos). Puede ser que necesites iniciar sesión con tu cuenta @rappi.com de Google en este navegador (abre gmail.com en otra pestaña), que no tengas acceso a la hoja, o que esté respondiendo muy lento. Si ya iniciaste sesión, espera un momento y usa "Reintentar".');
+    }
+    if(err.message === 'script-load-error'){
+      throw new Error('No se pudo contactar la hoja en vivo. Revisa tu conexión a internet y que la URL de Apps Script en loader.js sea correcta (debe terminar en /exec). Si el problema persiste, puede que la implementación de Apps Script haya sido archivada o eliminada.');
+    }
+    throw new Error(`Error de red al contactar la hoja en vivo: ${err.message}`);
+  }
+
+  if(!payload || !payload.ok){
+    throw new Error((payload && payload.error) || 'Error desconocido reportado por la hoja.');
+  }
+
+  const allRows = payload.records || [];
+  const warnings = payload.errors || [];
+
+  if(allRows.length === 0 && warnings.length === 0){
+    warnings.push('La hoja respondió correctamente pero no trajo ninguna fila con campaña.');
+  }
+
+  // Normalize maker / campaign casing across the combined dataset
+  const makerCanon = buildCanonMap(allRows.map(r => r.maker));
+  const campaignCanon = buildCanonMap(allRows.map(r => r.campaign));
+  allRows.forEach(r => {
+    if(r.maker) r.maker = makerCanon[r.maker.toLowerCase()];
+    if(r.campaign) r.campaign = campaignCanon[r.campaign.toLowerCase()];
+  });
+
+  return { records: allRows, warnings };
+}
+
+
+// DATA is populated asynchronously by loadLiveData() (see loader.js) instead of being embedded here.
+// Shape per record: {period, campaign, maker, catalog, ean, productId, sync, productName,
+//                     startDate, endDate, discountPct, cargaMakerPct, cargaTurboPct, status}
+// Derived in enrichRecord(): month (YYYY-MM), quarter (Q1-Q4), year (YYYY), cargaTotalPct
+let DATA = [];
+
+const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function monthLabel(ym){
+  const [y,m] = ym.split('-');
+  return `${MONTH_NAMES[parseInt(m,10)-1]} ${y}`;
+}
+
+// Adds derived fields (month, quarter, year, cargaTotalPct) to each raw record coming from the sheet.
+function enrichRecord(o){
+  o.month = o.startDate ? o.startDate.slice(0,7) : null; // YYYY-MM, derived from START DATE
+  if(o.startDate){
+    const [y, m] = o.startDate.split('-');
+    o.year = y;
+    o.quarter = 'Q' + (Math.floor((parseInt(m,10) - 1) / 3) + 1); // real calendar quarter from START DATE
+  } else {
+    o.year = null;
+    o.quarter = null;
+  }
+  const hasAnyCarga = o.cargaMakerPct != null || (o.cargaTurboPct != null && o.cargaTurboPct !== 0);
+  o.cargaTotalPct = hasAnyCarga ? (o.cargaMakerPct || 0) + (o.cargaTurboPct || 0) : null;
+  return o;
+}
+
+// ---------- helpers ----------
+function fmtDate(d){
+  if(!d) return '—';
+  const [y,m,day] = d.split('-');
+  const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return `${day} ${months[parseInt(m,10)-1]} ${y}`;
+}
+function discTier(v){
+  if(v == null) return 'base';
+  if(v >= 40) return 'fire';
+  if(v >= 25) return 'star';
+  return 'base';
+}
+function statusClass(s){
+  s = (s||'').toUpperCase();
+  if(s === 'CARGADO') return 's-ok';
+  if(s === 'EN PROCESO' || s === 'ESPERANDO OC' || s === 'ADS') return 's-warn';
+  if(s === 'NO CARGADO' || s === 'PROMOCIÓN CANCELADA') return 's-bad';
+  return 's-mute';
+}
+function statusLabel(s){
+  if(!s) return 'Sin estado';
+  return s.charAt(0) + s.slice(1).toLowerCase();
+}
+function matchInfo(d){
+  // ADS-tagged rows are loaded by the ADS team in a separate system — comparing them here
+  // would flag a "mismatch" we have no control over, so we just label them instead.
+  if((d.status||'').toUpperCase() === 'ADS'){
+    return {label:'Carga ADS', cls:'match-na'};
+  }
+  if(d.discountPct == null) return {label:'—', cls:'match-na'};
+
+  const hasMaker = d.cargaMakerPct != null;
+  const hasTurbo = d.cargaTurboPct != null && d.cargaTurboPct !== 0;
+  if(!hasMaker && !hasTurbo) return {label:'Sin carga', cls:'match-na'};
+
+  const cargaTotal = (d.cargaMakerPct || 0) + (d.cargaTurboPct || 0);
+  const diff = Math.abs(d.discountPct - cargaTotal);
+  if(diff <= 1) return {label:'✓ Coincide', cls:'match-ok'};
+  return {label:`⚠ Difiere ${diff.toFixed(0)}pp`, cls:'match-bad'};
+}
+function cargaBreakdown(d){
+  const maker = d.cargaMakerPct;
+  const turbo = d.cargaTurboPct;
+  const parts = [];
+  if(maker != null && maker !== 0) parts.push(`${maker.toFixed(0)}% maker`);
+  if(turbo != null && turbo !== 0) parts.push(`${turbo.toFixed(0)}% turbo`);
+  if(parts.length === 0) return '—';
+  return parts.join(' + ');
+}
+function escapeHtml(s){
+  if(s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- populate filter options ----------
+const yearSel = document.getElementById('yearFilter');
+const quarterSel = document.getElementById('quarterFilter');
+const monthSel = document.getElementById('monthFilter');
+const makerSel = document.getElementById('makerFilter');
+const campaignSel = document.getElementById('campaignFilter');
+const statusSel = document.getElementById('statusFilter');
+
+function populateSelect(selectEl, values, placeholderText, currentValue, labelFn){
+  selectEl.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = ''; placeholder.textContent = placeholderText;
+  selectEl.appendChild(placeholder);
+  values.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v; opt.textContent = labelFn ? labelFn(v) : v;
+    selectEl.appendChild(opt);
+  });
+  // keep the current selection if it's still a valid option, otherwise fall back to "all"
+  selectEl.value = values.includes(currentValue) ? currentValue : '';
+}
+
+// Rows matching every active filter EXCEPT the one named in `except` — used to compute what
+// options remain valid for that filter given everything else currently selected.
+function rowsExcluding(except){
+  let rows = DATA;
+  if(except !== 'year' && state.year) rows = rows.filter(d => d.year === state.year);
+  if(except !== 'quarter' && state.quarter) rows = rows.filter(d => d.quarter === state.quarter);
+  if(except !== 'month' && state.month) rows = rows.filter(d => d.month === state.month);
+  if(except !== 'maker' && state.maker) rows = rows.filter(d => d.maker === state.maker);
+  if(except !== 'campaign' && state.campaign) rows = rows.filter(d => d.campaign === state.campaign);
+  return rows;
+}
+
+const QUARTER_ORDER = { Q1: 1, Q2: 2, Q3: 3, Q4: 4 };
+
+// Repopulate year / quarter / month / maker / campaign options so each only lists values that
+// still co-occur with everything else currently selected (e.g. picking month=junio hides a
+// campaign that only ever ran in mayo; picking maker BUKA hides a campaign BUKA never ran;
+// picking quarter=Q3 hides months outside July-September).
+function refreshDependentFilters(){
+  const availableYears = [...new Set(rowsExcluding('year').map(d=>d.year).filter(Boolean))].sort();
+  populateSelect(yearSel, availableYears, 'Todos los años', state.year);
+  if(!availableYears.includes(state.year)) state.year = '';
+
+  const availableQuarters = [...new Set(rowsExcluding('quarter').map(d=>d.quarter).filter(Boolean))]
+    .sort((a,b) => QUARTER_ORDER[a] - QUARTER_ORDER[b]);
+  populateSelect(quarterSel, availableQuarters, 'Todos los trimestres', state.quarter);
+  if(!availableQuarters.includes(state.quarter)) state.quarter = '';
+
+  const availableMonths = [...new Set(rowsExcluding('month').map(d=>d.month).filter(Boolean))].sort();
+  populateSelect(monthSel, availableMonths, 'Todos los meses', state.month, monthLabel);
+  if(!availableMonths.includes(state.month)) state.month = '';
+
+  const availableCampaigns = [...new Set(rowsExcluding('campaign').map(d=>d.campaign).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+  populateSelect(campaignSel, availableCampaigns, 'Todas las campañas', state.campaign);
+  if(!availableCampaigns.includes(state.campaign)) state.campaign = '';
+
+  const availableMakers = [...new Set(rowsExcluding('maker').map(d=>d.maker).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  populateSelect(makerSel, availableMakers, 'Todos los makers', state.maker);
+  if(!availableMakers.includes(state.maker)) state.maker = '';
+}
+
+function populateStatusFilter(){
+  const statuses = [...new Set(DATA.map(d=>d.status).filter(Boolean))].sort();
+  populateSelect(statusSel, statuses, 'Todos los estados', state.status, statusLabel);
+  if(!statuses.includes(state.status)) state.status = '';
+}
+
+// ---------- KPIs ----------
+function renderKPIs(){
+  const withDisc = DATA.filter(d => d.discountPct != null);
+  const avg = withDisc.reduce((a,d)=>a+d.discountPct,0) / withDisc.length;
+  const cargados = DATA.filter(d => (d.status||'').toUpperCase() === 'CARGADO').length;
+  const enProceso = DATA.filter(d => (d.status||'').toUpperCase() === 'EN PROCESO').length;
+  const campaigns = new Set(DATA.map(d=>d.campaign)).size;
+  const makersCount = new Set(DATA.map(d=>d.maker).filter(Boolean)).size;
+  const top = Math.max(...withDisc.map(d=>d.discountPct));
+
+  const kpis = [
+    {val: campaigns.toLocaleString('es-CL'), label:'Campañas mapeadas'},
+    {val: DATA.length.toLocaleString('es-CL'), label:'SKUs en promo'},
+    {val: makersCount.toLocaleString('es-CL'), label:'Makers participando'},
+    {val: avg.toFixed(1)+'%', label:'Descuento promedio'},
+    {val: top.toFixed(0)+'%', label:'Descuento máximo', yellow:true},
+    {val: cargados.toLocaleString('es-CL'), label:'Líneas cargadas ✓'},
+    {val: enProceso.toLocaleString('es-CL'), label:'En proceso ⏳'},
+  ];
+
+  document.getElementById('kpiRow').innerHTML = kpis.map(k => `
+    <div class="kpi">
+      <div class="kpi-val ${k.yellow?'yellow':''}">${k.val}</div>
+      <div class="kpi-label">${k.label}</div>
+    </div>
+  `).join('');
+
+  const dates = DATA.map(d=>d.startDate).filter(Boolean).sort();
+  const dates2 = DATA.map(d=>d.endDate).filter(Boolean).sort();
+  const yearsNow = [...new Set(DATA.map(d=>d.year).filter(Boolean))].sort();
+  document.getElementById('heroMeta').innerHTML = `
+    Ventana: <b>${fmtDate(dates[0])}</b> → <b>${fmtDate(dates2[dates2.length-1])}</b><br>
+    Años: <b>${yearsNow.join(' · ')}</b><br>
+    <span id="lastUpdatedLabel">Actualizado: cargando…</span>
+  `;
+}
+
+// ---------- filtering / sorting / pagination state ----------
+let state = {
+  search: '',
+  year: '',
+  quarter: '',
+  month: '',
+  maker: '',
+  campaign: '',
+  status: '',
+  minDisc: 0,
+  codeField: 'ean',
+  sortCol: 'discountPct',
+  sortDir: 'desc',
+  page: 1,
+  pageSize: 50,
+};
+
+// ---------- spotlight (top discounts) ----------
+// Reacts to year / quarter / month / maker / campaign / status filters (not free-text search or
+// min-discount slider, since the spotlight IS the discount ranking — filtering it by min discount
+// would be circular).
+function spotlightFilteredRows(){
+  let rows = DATA;
+  if(state.year) rows = rows.filter(d => d.year === state.year);
+  if(state.quarter) rows = rows.filter(d => d.quarter === state.quarter);
+  if(state.month) rows = rows.filter(d => d.month === state.month);
+  if(state.maker) rows = rows.filter(d => d.maker === state.maker);
+  if(state.campaign) rows = rows.filter(d => d.campaign === state.campaign);
+  if(state.status) rows = rows.filter(d => d.status === state.status);
+  return rows;
+}
+
+function spotlightLabel(){
+  const parts = [];
+  if(state.month) parts.push(monthLabel(state.month));
+  else if(state.quarter || state.year) parts.push([state.quarter, state.year].filter(Boolean).join(' '));
+  if(state.campaign) parts.push(state.campaign);
+  if(state.maker) parts.push(state.maker);
+  if(state.status) parts.push(statusLabel(state.status).toLowerCase());
+  return parts.length ? parts.join(' · ') : 'del semestre';
+}
+
+let spotlightTopRows = []; // keeps the currently rendered top-12 rows so card clicks can look up full detail
+
+function renderSpotlight(){
+  const filtered = spotlightFilteredRows().filter(d => d.discountPct != null && d.productName);
+  const top = [...filtered].sort((a,b) => b.discountPct - a.discountPct).slice(0, 12);
+  spotlightTopRows = top;
+
+  document.getElementById('spotlightTitle').textContent = `🔥 Top descuentos ${spotlightLabel()}`;
+  document.getElementById('spotlightNote').textContent = top.length
+    ? `Las ${top.length} promos con mayor % de descuento final activo${filtered.length ? ` (de ${filtered.length.toLocaleString('es-CL')} con descuento en este filtro)` : ''} · clic en una tarjeta para ver el detalle`
+    : 'No hay promos con descuento para este filtro';
+
+  const container = document.getElementById('spotlight');
+
+  if(top.length === 0){
+    container.innerHTML = `<div class="empty-state" style="padding:30px 16px;"><div class="big" style="font-size:15px;">Sin descuentos para este filtro</div><div style="font-size:12px;">Prueba otro mes, maker o estado.</div></div>`;
+    return;
+  }
+
+  container.innerHTML = top.map((d, i) => {
+    const tier = discTier(d.discountPct);
+    return `
+    <div class="spot-card" data-spot-idx="${i}" tabindex="0" role="button" aria-label="Ver detalle de ${escapeHtml(d.productName)}">
+      <div class="spot-rank">#${i+1}</div>
+      <div class="spot-disc ${tier === 'fire' ? 'high':'mid'}">${d.discountPct.toFixed(0)}%</div>
+      <span class="spot-tag ${tier === 'fire' ? 'fire':'star'}">${tier === 'fire' ? '🔥 MUY ALTO' : '⭐ DESTACADO'}</span>
+      <div class="spot-name">${escapeHtml(d.productName)}</div>
+      <div class="spot-maker">${escapeHtml(d.maker || 'Maker no especificado')}</div>
+      <div class="spot-campaign">${escapeHtml(d.campaign)}</div>
+    </div>
+  `;
+  }).join('');
+
+  container.querySelectorAll('.spot-card').forEach(card => {
+    const openDetail = () => openSpotDetail(spotlightTopRows[parseInt(card.dataset.spotIdx, 10)]);
+    card.addEventListener('click', openDetail);
+    card.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openDetail(); } });
+  });
+}
+
+function applyFilters(){
+  let rows = DATA;
+  const q = state.search.trim().toLowerCase();
+  if(q){
+    rows = rows.filter(d =>
+      (d.productName && d.productName.toLowerCase().includes(q)) ||
+      (d.campaign && d.campaign.toLowerCase().includes(q)) ||
+      (d.maker && d.maker.toLowerCase().includes(q)) ||
+      (d.ean && d.ean.includes(q)) ||
+      (d.sync && d.sync.includes(q)) ||
+      (d.productId && d.productId.includes(q)) ||
+      (d.catalog && d.catalog.includes(q))
+    );
+  }
+  if(state.year) rows = rows.filter(d => d.year === state.year);
+  if(state.quarter) rows = rows.filter(d => d.quarter === state.quarter);
+  if(state.month) rows = rows.filter(d => d.month === state.month);
+  if(state.maker) rows = rows.filter(d => d.maker === state.maker);
+  if(state.campaign) rows = rows.filter(d => d.campaign === state.campaign);
+  if(state.status) rows = rows.filter(d => d.status === state.status);
+  if(state.minDisc > 0) rows = rows.filter(d => d.discountPct != null && d.discountPct >= state.minDisc);
+
+  rows = [...rows].sort((a,b) => {
+    let av = a[state.sortCol], bv = b[state.sortCol];
+    if(state.sortCol === 'discountPct' || state.sortCol === 'cargaTotalPct'){
+      av = av == null ? -1 : av; bv = bv == null ? -1 : bv;
+    }
+    if(av == null) av = '';
+    if(bv == null) bv = '';
+    if(typeof av === 'string') av = av.toLowerCase();
+    if(typeof bv === 'string') bv = bv.toLowerCase();
+    if(av < bv) return state.sortDir === 'asc' ? -1 : 1;
+    if(av > bv) return state.sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  return rows;
+}
+
+// ---------- spotlight detail modal ----------
+function openSpotDetail(d){
+  if(!d) return;
+  const tier = discTier(d.discountPct);
+  const m = matchInfo(d);
+
+  document.getElementById('detailModalBody').innerHTML = `
+    <div class="detail-header">
+      <div class="detail-disc">${d.discountPct.toFixed(0)}%</div>
+      <div class="detail-product" id="detailModalTitle">${escapeHtml(d.productName)}</div>
+      <div class="detail-maker-campaign">${escapeHtml(d.maker || 'Maker no especificado')} · ${escapeHtml(d.campaign)}</div>
+    </div>
+    <div class="detail-body">
+      <div class="detail-grid">
+        <div class="detail-field">
+          <div class="detail-field-label">Estado de carga</div>
+          <div class="detail-field-val"><span class="status-badge ${statusClass(d.status)}">${escapeHtml(statusLabel(d.status))}</span></div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Match desc. vs. carga</div>
+          <div class="detail-field-val"><span class="match-flag ${m.cls}">${m.label}</span></div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Vigencia</div>
+          <div class="detail-field-val mono">${fmtDate(d.startDate)} → ${fmtDate(d.endDate)}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Carga (maker + turbo)</div>
+          <div class="detail-field-val mono">${cargaBreakdown(d)}</div>
+        </div>
+      </div>
+
+      <div class="detail-section-title">Códigos de identificación</div>
+      <div class="detail-codes">
+        <div class="detail-code-box">
+          <div class="detail-code-label">EAN</div>
+          <div class="detail-code-val">${escapeHtml(d.ean || '—')}</div>
+        </div>
+        <div class="detail-code-box">
+          <div class="detail-code-label">Sync</div>
+          <div class="detail-code-val">${escapeHtml(d.sync || '—')}</div>
+        </div>
+        <div class="detail-code-box">
+          <div class="detail-code-label">Content Portal ID</div>
+          <div class="detail-code-val">${escapeHtml(d.productId || '—')}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const overlay = document.getElementById('detailOverlay');
+  overlay.classList.add('open');
+  overlay.setAttribute('aria-hidden', 'false');
+  document.getElementById('detailCloseBtn').focus();
+}
+
+function closeSpotDetail(){
+  const overlay = document.getElementById('detailOverlay');
+  overlay.classList.remove('open');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
+document.getElementById('detailCloseBtn').addEventListener('click', closeSpotDetail);
+document.getElementById('detailOverlay').addEventListener('click', e => {
+  if(e.target.id === 'detailOverlay') closeSpotDetail();
+});
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && document.getElementById('detailOverlay').classList.contains('open')) closeSpotDetail();
+});
+
+function renderTable(){
+  renderSpotlight();
+  const rows = applyFilters();
+  const total = rows.length;
+  const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+  if(state.page > totalPages) state.page = totalPages;
+  const startIdx = (state.page - 1) * state.pageSize;
+  const pageRows = rows.slice(startIdx, startIdx + state.pageSize);
+
+  document.getElementById('resultCount').textContent = total.toLocaleString('es-CL');
+  document.getElementById('resultHint').textContent = total > 0
+    ? `Mostrando ${startIdx+1}–${Math.min(startIdx+state.pageSize,total)} de ${total}`
+    : '';
+
+  const codeHeader = document.getElementById('codeColHeader');
+  if(codeHeader){
+    const labels = { ean: 'EAN', sync: 'Sync', productId: 'Content Portal ID' };
+    codeHeader.firstChild.textContent = labels[state.codeField] + ' ';
+  }
+
+  const tbody = document.getElementById('tableBody');
+  const emptyState = document.getElementById('emptyState');
+
+  if(pageRows.length === 0){
+    tbody.innerHTML = '';
+    emptyState.style.display = 'block';
+  } else {
+    emptyState.style.display = 'none';
+    tbody.innerHTML = pageRows.map(d => {
+      const tier = discTier(d.discountPct);
+      const m = matchInfo(d);
+      const codeVal = d[state.codeField];
+      return `
+      <tr>
+        <td><span class="status-badge ${statusClass(d.status)}">${escapeHtml(statusLabel(d.status))}</span></td>
+        <td class="campaign-cell">${escapeHtml(d.campaign)}</td>
+        <td>${escapeHtml(d.maker || '—')}</td>
+        <td class="product-cell">${escapeHtml(d.productName || '—')}</td>
+        <td class="mono">${escapeHtml(codeVal || '—')}</td>
+        <td class="mono">${fmtDate(d.startDate)}</td>
+        <td class="mono">${fmtDate(d.endDate)}</td>
+        <td class="num"><span class="disc-pill t-${tier}">${d.discountPct != null ? d.discountPct.toFixed(0)+'%' : '—'}</span></td>
+        <td class="num mono">${cargaBreakdown(d)}</td>
+        <td class="num"><span class="match-flag ${m.cls}">${m.label}</span></td>
+      </tr>
+    `;
+    }).join('');
+  }
+
+  renderPager(totalPages);
+
+  // sort header indicator
+  document.querySelectorAll('thead th').forEach(th => {
+    th.classList.toggle('active-sort', th.dataset.col === state.sortCol);
+    const arrow = th.querySelector('.arrow');
+    if(th.dataset.col === state.sortCol && arrow){
+      arrow.textContent = state.sortDir === 'asc' ? '▴' : '▾';
+    } else if(arrow){
+      arrow.textContent = '▾';
+    }
+  });
+}
+
+function renderPager(totalPages){
+  const pager = document.getElementById('pager');
+  if(totalPages <= 1){ pager.innerHTML = ''; return; }
+  let html = '';
+  html += `<button ${state.page===1?'disabled':''} data-pg="1">«</button>`;
+  html += `<button ${state.page===1?'disabled':''} data-pg="${state.page-1}">‹</button>`;
+  html += `<span class="pageinfo">Página ${state.page} / ${totalPages}</span>`;
+  html += `<button ${state.page===totalPages?'disabled':''} data-pg="${state.page+1}">›</button>`;
+  html += `<button ${state.page===totalPages?'disabled':''} data-pg="${totalPages}">»</button>`;
+  pager.innerHTML = html;
+  pager.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      state.page = parseInt(b.dataset.pg, 10);
+      renderTable();
+      document.querySelector('.panel').scrollIntoView({behavior:'smooth', block:'nearest'});
+    });
+  });
+}
+
+// ---------- event wiring ----------
+let searchDebounce;
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => {
+    state.search = e.target.value;
+    state.page = 1;
+    renderTable();
+  }, 150);
+});
+
+document.getElementById('yearFilter').addEventListener('change', e => {
+  state.year = e.target.value; state.page = 1;
+  refreshDependentFilters();
+  renderTable();
+});
+document.getElementById('quarterFilter').addEventListener('change', e => {
+  state.quarter = e.target.value; state.page = 1;
+  refreshDependentFilters();
+  renderTable();
+});
+document.getElementById('monthFilter').addEventListener('change', e => {
+  state.month = e.target.value; state.page = 1;
+  refreshDependentFilters();
+  renderTable();
+});
+document.getElementById('makerFilter').addEventListener('change', e => {
+  state.maker = e.target.value; state.page = 1;
+  refreshDependentFilters();
+  renderTable();
+});
+document.getElementById('campaignFilter').addEventListener('change', e => {
+  state.campaign = e.target.value; state.page = 1;
+  refreshDependentFilters();
+  renderTable();
+});
+document.getElementById('statusFilter').addEventListener('change', e => {
+  state.status = e.target.value; state.page = 1; renderTable();
+});
+document.getElementById('codeFieldSelect').addEventListener('change', e => {
+  state.codeField = e.target.value;
+  renderTable();
+});
+document.getElementById('discSlider').addEventListener('input', e => {
+  state.minDisc = parseInt(e.target.value, 10);
+  document.getElementById('discSliderVal').textContent = state.minDisc + '%';
+  state.page = 1;
+  renderTable();
+});
+
+document.getElementById('sortToggle').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  document.querySelectorAll('#sortToggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.sortCol = btn.dataset.sort;
+  state.sortDir = btn.dataset.sort === 'endDate' ? 'asc' : (btn.dataset.sort === 'campaign' ? 'asc' : 'desc');
+  state.page = 1;
+  renderTable();
+});
+
+document.querySelectorAll('thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if(col === 'match') return;
+    if(state.sortCol === col){
+      state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.sortCol = col;
+      state.sortDir = (col === 'endDate' || col === 'campaign' || col === 'maker' || col === 'productName' || col === 'status') ? 'asc' : 'desc';
+    }
+    document.querySelectorAll('#sortToggle button').forEach(b => b.classList.remove('active'));
+    state.page = 1;
+    renderTable();
+  });
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  state = {search:'', year:'', quarter:'', month:'', maker:'', campaign:'', status:'', minDisc:0, codeField:'ean', sortCol:'discountPct', sortDir:'desc', page:1, pageSize:50};
+  document.getElementById('searchInput').value = '';
+  refreshDependentFilters();
+  populateStatusFilter();
+  document.getElementById('discSlider').value = 0;
+  document.getElementById('discSliderVal').textContent = '0%';
+  document.getElementById('codeFieldSelect').value = 'ean';
+  document.querySelectorAll('#sortToggle button').forEach(b => b.classList.remove('active'));
+  document.querySelector('#sortToggle button[data-sort="discountPct"]').classList.add('active');
+  renderTable();
+});
+
+// ---------- live data bootstrap ----------
+// Runs everything that used to fire immediately when DATA was embedded at build time.
+// Now it only runs once real rows have arrived from the published Google Sheets CSVs.
+function initApp(){
+  renderKPIs();
+  refreshDependentFilters();
+  populateStatusFilter();
+  renderTable();
+}
+
+function setLoadingUI(isLoading, message){
+  const el = document.getElementById('loadStatus');
+  if(!el) return;
+  if(isLoading){
+    el.style.display = 'flex';
+    el.querySelector('.load-status-text').textContent = message || 'Cargando promociones desde Google Sheets… puede tardar hasta 20-30 segundos.';
+    el.classList.remove('load-status-error');
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function showLoadError(message){
+  const el = document.getElementById('loadStatus');
+  if(!el) return;
+  el.style.display = 'flex';
+  el.classList.add('load-status-error');
+
+  const needsLogin = /iniciar sesión|no tienes acceso/i.test(message);
+  const extraBtn = needsLogin
+    ? `<a href="https://accounts.google.com/ServiceLogin" target="_blank" rel="noopener" class="retry-btn">Iniciar sesión Google</a>`
+    : '';
+  el.querySelector('.load-status-text').innerHTML = `${escapeHtml(message)} <button id="retryLoadBtn" class="retry-btn">Reintentar</button> ${extraBtn}`;
+  const retryBtn = document.getElementById('retryLoadBtn');
+  if(retryBtn) retryBtn.addEventListener('click', () => loadAndRender(true));
+}
+
+let isFirstLoad = true;
+
+async function loadAndRender(isManualRefresh){
+  setLoadingUI(true, isManualRefresh ? 'Actualizando desde Google Sheets… puede tardar hasta 20-30 segundos.' : 'Cargando promociones desde Google Sheets… puede tardar hasta 20-30 segundos.');
+  const refreshBtn = document.getElementById('refreshBtn');
+  if(refreshBtn) refreshBtn.disabled = true;
+
+  try{
+    const { records, warnings } = await loadLiveData();
+    DATA = records.map(enrichRecord);
+
+    if(isFirstLoad){
+      initApp();
+      isFirstLoad = false;
+    } else {
+      // keep current filters/sort/page, just refresh the underlying rows and re-render
+      refreshDependentFilters();
+      populateStatusFilter();
+      renderKPIs();
+      renderTable();
+    }
+
+    const ts = new Date();
+    const stamp = ts.toLocaleString('es-CL', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const lbl = document.getElementById('lastUpdatedLabel');
+    if(lbl) lbl.textContent = `Actualizado: ${stamp}`;
+
+    if(warnings.length){
+      showLoadError(warnings.join(' '));
+    } else {
+      setLoadingUI(false);
+    }
+  } catch(err){
+    showLoadError(err.message || 'Error desconocido al leer Google Sheets.');
+  } finally {
+    if(refreshBtn) refreshBtn.disabled = false;
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', () => loadAndRender(true));
+
+loadAndRender(false);
+
+</script>
+</body>
+</html>
