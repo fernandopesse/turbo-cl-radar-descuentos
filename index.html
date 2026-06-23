@@ -415,6 +415,24 @@ h1 em{
   border-color: var(--turbo-violet);
   background: var(--paper-dim);
 }
+.date-mode-sep{
+  color: var(--line);
+  font-size: 14px;
+  margin: 0 2px;
+}
+.date-mode-btn{
+  border: none;
+  background: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--turbo-violet);
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+.date-mode-btn:hover{ background: var(--paper-dim); }
 select, .chip-select{
   padding: 9px 12px;
   border: 1px solid var(--line);
@@ -857,7 +875,6 @@ footer{
 
 ::selection{ background: var(--turbo-yellow); color: var(--ink); }
 
-/* TAB NAV */
 .tab-nav{ display:flex; gap:4px; margin-top:22px; position:relative; z-index:1; }
 .tab-btn{ font-family:var(--mono); font-size:12.5px; font-weight:700; padding:9px 18px; border:none; background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.65); border-radius:9px 9px 0 0; cursor:pointer; transition:background 0.15s,color 0.15s; }
 .tab-btn:hover{ background:rgba(255,255,255,0.14); color:white; }
@@ -1269,14 +1286,16 @@ footer{
       <div class="controls">
         <div class="search-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input type="text" id="m-searchInput" placeholder="Buscar…">
+          <input type="text" id="m-searchInput" placeholder="Buscar producto, EAN, Sync, Content Portal ID, maker o campaña…">
         </div>
         <div class="date-range-wrap">
           <span class="date-range-label">Vigente entre:</span>
           <input type="date" id="m-dateFrom" title="Desde">
           <span class="date-range-sep">—</span>
           <input type="date" id="m-dateTo" title="Hasta">
-          <button id="m-dateClearBtn" class="date-clear-btn" title="Limpiar">✕</button>
+          <button id="m-dateClearBtn" class="date-clear-btn" title="Limpiar rango de fechas">✕</button>
+          <span class="date-mode-sep">|</span>
+          <button id="m-dateModeBtn" class="date-mode-btn" title="Cambiar modo de filtro de fecha">Vigente</button>
         </div>
         <select id="m-yearFilter"><option value="">Todos los años</option></select>
         <select id="m-quarterFilter"><option value="">Todos los trimestres</option></select>
@@ -1331,7 +1350,7 @@ footer{
       </div>
       <div class="pager" id="m-pager"></div>
     </section>
-    <footer>Fuente: Google Sheets en vivo · Generado para uso interno</footer>
+    <footer>Fuente: Google Sheets en vivo (calendario comercial TURBO CL) — Supply_Data 2026_Q1Q2 y Q3Q4 · Generado para uso interno</footer>
   </main>
   <div id="m-detailOverlay" class="detail-overlay" aria-hidden="true">
     <div class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="m-detailModalTitle">
@@ -1356,13 +1375,14 @@ footer{
       <span class="generated-stamp" id="w-generatedStamp">Generado: —</span>
     </div>
   </div>
-  <div class="snapshot-note" id="w-snapshotNote">⚠ Esta vista es una FOTO.</div>
+  <div class="snapshot-note" id="w-snapshotNote">⚠ Esta vista es una FOTO al momento de generarla — no se actualiza sola.</div>
   <div class="legend">
-    <div class="legend-item"><span class="legend-dot" style="background:var(--ok)"></span> Cargado en WMS</div>
-    <div class="legend-item"><span class="legend-dot" style="background:var(--warn)"></span> Solo SMART</div>
-    <div class="legend-item"><span class="legend-dot" style="background:var(--bad)"></span> No encontrado</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--ok)"></span> Cargado en WMS (campaña manual activa)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--warn)"></span> Solo promo automática (por vencimiento)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--bad)"></span> No encontrado en WMS</div>
   </div>
   <main class="shell"><div id="w-dealsContainer"></div></main>
+  <footer>Fuente: calendario comercial (Google Sheets) + Snowflake FIVETRAN.CL_AMYSQL_TURBO_EMERGENCY_ORDER_TURBO_PROMOTION_ENGINE · Generado para uso interno</footer>
   <div id="w-detailOverlay" class="detail-overlay" aria-hidden="true">
     <div class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="w-detailModalTitle">
       <button id="w-detailCloseBtn" class="detail-close" aria-label="Cerrar">✕</button>
@@ -1675,10 +1695,19 @@ function rowsExcluding(except){
   if(except !== 'month' && state.month) rows = rows.filter(d => d.month === state.month);
   if(except !== 'maker' && state.maker) rows = rows.filter(d => d.maker === state.maker);
   if(except !== 'campaign' && state.campaign) rows = rows.filter(d => d.campaign === state.campaign);
-  // Date range always participates in the cascade — it has no matching "except" key since
-  // it's not a dropdown that needs its own options refreshed from the other filters.
-  if(state.dateFrom) rows = rows.filter(d => d.endDate && d.endDate >= state.dateFrom);
-  if(state.dateTo)   rows = rows.filter(d => d.startDate && d.startDate <= state.dateTo);
+  // Date range always participates in the cascade (no matching "except" key).
+  if(state.dateFrom || state.dateTo) {
+    if(state.dateMode === 'overlap') {
+      if(state.dateFrom) rows = rows.filter(d => d.endDate && d.endDate >= state.dateFrom);
+      if(state.dateTo)   rows = rows.filter(d => d.startDate && d.startDate <= state.dateTo);
+    } else {
+      rows = rows.filter(d => {
+        const startIn = d.startDate && (!state.dateFrom || d.startDate >= state.dateFrom) && (!state.dateTo || d.startDate <= state.dateTo);
+        const endIn   = d.endDate   && (!state.dateFrom || d.endDate   >= state.dateFrom) && (!state.dateTo || d.endDate   <= state.dateTo);
+        return startIn || endIn;
+      });
+    }
+  }
   return rows;
 }
 
@@ -1792,6 +1821,7 @@ let state = {
   codeField: 'ean',
   dateFrom: '',
   dateTo: '',
+  dateMode: 'overlap', // 'overlap' = vigente en algún momento del rango | 'bounds' = empieza O termina dentro del rango
   sortCol: 'discountPct',
   sortDir: 'desc',
   page: 1,
@@ -1810,8 +1840,18 @@ function spotlightFilteredRows(){
   if(state.maker) rows = rows.filter(d => d.maker === state.maker);
   if(state.campaign) rows = rows.filter(d => d.campaign === state.campaign);
   if(state.status) rows = rows.filter(d => d.status === state.status);
-  if(state.dateFrom) rows = rows.filter(d => d.endDate && d.endDate >= state.dateFrom);
-  if(state.dateTo)   rows = rows.filter(d => d.startDate && d.startDate <= state.dateTo);
+  if(state.dateFrom || state.dateTo) {
+    if(state.dateMode === 'overlap') {
+      if(state.dateFrom) rows = rows.filter(d => d.endDate && d.endDate >= state.dateFrom);
+      if(state.dateTo)   rows = rows.filter(d => d.startDate && d.startDate <= state.dateTo);
+    } else {
+      rows = rows.filter(d => {
+        const startIn = d.startDate && (!state.dateFrom || d.startDate >= state.dateFrom) && (!state.dateTo || d.startDate <= state.dateTo);
+        const endIn   = d.endDate   && (!state.dateFrom || d.endDate   >= state.dateFrom) && (!state.dateTo || d.endDate   <= state.dateTo);
+        return startIn || endIn;
+      });
+    }
+  }
   return rows;
 }
 
@@ -1886,10 +1926,22 @@ function applyFilters(){
   if(state.campaign) rows = rows.filter(d => d.campaign === state.campaign);
   if(state.status) rows = rows.filter(d => d.status === state.status);
   if(state.minDisc > 0) rows = rows.filter(d => d.discountPct != null && d.discountPct >= state.minDisc);
-  // Date range: show promos whose vigency overlaps with [dateFrom, dateTo].
-  // A promo overlaps if it starts before or on dateTo AND ends on or after dateFrom.
-  if(state.dateFrom) rows = rows.filter(d => d.endDate && d.endDate >= state.dateFrom);
-  if(state.dateTo)   rows = rows.filter(d => d.startDate && d.startDate <= state.dateTo);
+  // Date range filter — two modes:
+  // 'overlap': promo is active on at least one day within [dateFrom, dateTo]
+  // 'bounds':  promo starts OR ends within [dateFrom, dateTo]
+  if(state.dateFrom || state.dateTo) {
+    if(state.dateMode === 'overlap') {
+      if(state.dateFrom) rows = rows.filter(d => d.endDate && d.endDate >= state.dateFrom);
+      if(state.dateTo)   rows = rows.filter(d => d.startDate && d.startDate <= state.dateTo);
+    } else {
+      // bounds: startDate OR endDate falls within the range
+      rows = rows.filter(d => {
+        const startIn = d.startDate && (!state.dateFrom || d.startDate >= state.dateFrom) && (!state.dateTo || d.startDate <= state.dateTo);
+        const endIn   = d.endDate   && (!state.dateFrom || d.endDate   >= state.dateFrom) && (!state.dateTo || d.endDate   <= state.dateTo);
+        return startIn || endIn;
+      });
+    }
+  }
 
   rows = [...rows].sort((a,b) => {
     let av = a[state.sortCol], bv = b[state.sortCol];
@@ -2107,9 +2159,16 @@ document.getElementById('m-codeFieldSelect').addEventListener('change', e => {
 function updateDateRangeUI(){
   const wrap = document.getElementById('m-dateFrom').closest('.date-range-wrap');
   const clearBtn = document.getElementById('m-dateClearBtn');
+  const modeBtn = document.getElementById('m-dateModeBtn');
   const hasDate = state.dateFrom || state.dateTo;
   wrap.classList.toggle('active', !!hasDate);
   clearBtn.classList.toggle('visible', !!hasDate);
+  if(modeBtn){
+    modeBtn.textContent = state.dateMode === 'overlap' ? 'Vigente' : 'Inicia/termina';
+    modeBtn.title = state.dateMode === 'overlap'
+      ? 'Modo actual: muestra todo lo vigente en el rango. Clic para cambiar a "empieza o termina en el rango".'
+      : 'Modo actual: muestra solo lo que empieza o termina en el rango. Clic para cambiar a "vigente en el rango".';
+  }
 }
 
 document.getElementById('m-dateFrom').addEventListener('change', e => {
@@ -2135,6 +2194,14 @@ document.getElementById('m-dateClearBtn').addEventListener('click', () => {
   document.getElementById('m-dateFrom').max = '';
   document.getElementById('m-dateTo').min = '';
   document.getElementById('m-dateTo').max = '';
+  state.page = 1;
+  updateDateRangeUI();
+  refreshDependentFilters();
+  renderTable();
+});
+
+document.getElementById('m-dateModeBtn').addEventListener('click', () => {
+  state.dateMode = state.dateMode === 'overlap' ? 'bounds' : 'overlap';
   state.page = 1;
   updateDateRangeUI();
   refreshDependentFilters();
@@ -2176,7 +2243,7 @@ document.querySelectorAll('thead th').forEach(th => {
 });
 
 document.getElementById('m-resetBtn').addEventListener('click', () => {
-  state = {search:'', year:'', quarter:'', month:'', maker:'', campaign:'', status:'', minDisc:0, codeField:'ean', dateFrom:'', dateTo:'', sortCol:'discountPct', sortDir:'desc', page:1, pageSize:50};
+  state = {search:'', year:'', quarter:'', month:'', maker:'', campaign:'', status:'', minDisc:0, codeField:'ean', dateFrom:'', dateTo:'', dateMode:'overlap', sortCol:'discountPct', sortDir:'desc', page:1, pageSize:50};
   document.getElementById('m-searchInput').value = '';
   document.getElementById('m-dateFrom').value = '';
   document.getElementById('m-dateTo').value = '';
