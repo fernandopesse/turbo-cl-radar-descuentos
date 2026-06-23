@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Turbo CL · Radar de Descuentos</title>
-<style>
-:root{
+<style>:root{
   --turbo-violet: #5B2A9D;
   --turbo-violet-deep: #2E0F5C;
   --turbo-yellow: #FFD23F;
@@ -865,10 +864,8 @@ footer{
 .tab-btn.active{ background:var(--paper); color:var(--turbo-violet-deep); }
 .tab-panel{ display:none; }
 .tab-panel.active{ display:block; }
-
 </style>
 <style>
-
 body{
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--paper);
@@ -1230,7 +1227,6 @@ footer{
   .detail-grid{ grid-template-columns: 1fr; }
   .detail-codes{ grid-template-columns: 1fr; }
 }
-
 </style>
 </head>
 <body>
@@ -1247,14 +1243,11 @@ footer{
     </div>
     <div class="hero-meta" id="m-heroMeta">Cargando datos…</div>
   </div>
-
   <div class="kpi-row" id="m-kpiRow"></div>
-
   <div class="refresh-row" id="mainRefreshRow">
     <button id="m-refreshBtn" class="refresh-btn">⟳ Actualizar datos</button>
     <span class="refresh-hint">Datos en vivo desde Google Sheets · requiere cuenta @rappi.com con acceso</span>
   </div>
-
   <nav class="tab-nav">
     <button class="tab-btn active" data-tab="planificado">📋 Planificado (Calendario)</button>
     <button class="tab-btn" data-tab="wms">✅ Verificado en WMS</button>
@@ -1263,12 +1256,10 @@ footer{
 
 <!-- TAB 1: PLANIFICADO -->
 <div class="tab-panel active" id="tab-planificado">
-
   <div id="m-loadStatus" class="load-status">
     <span class="load-spinner"></span>
     <span class="load-status-text">Cargando promociones desde Google Sheets… puede tardar hasta 20-30 segundos.</span>
   </div>
-
   <main class="shell">
     <section>
       <div class="section-head">
@@ -1277,14 +1268,12 @@ footer{
       </div>
       <div class="spotlight-scroll" id="m-spotlight"></div>
     </section>
-
     <section class="panel">
       <div class="controls">
         <div class="search-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input type="text" id="m-searchInput" placeholder="Buscar producto, EAN, Sync, Content Portal ID, maker o campaña…">
         </div>
-
         <div class="date-range-wrap">
           <span class="date-range-label">Vigente entre:</span>
           <input type="date" id="m-dateFrom" title="Desde">
@@ -1292,14 +1281,12 @@ footer{
           <input type="date" id="m-dateTo" title="Hasta">
           <button id="m-dateClearBtn" class="date-clear-btn" title="Limpiar rango de fechas">✕</button>
         </div>
-
         <select id="m-yearFilter"><option value="">Todos los años</option></select>
         <select id="m-quarterFilter"><option value="">Todos los trimestres</option></select>
         <select id="m-monthFilter"><option value="">Todos los meses</option></select>
         <select id="m-makerFilter"><option value="">Todos los makers</option></select>
         <select id="m-campaignFilter"><option value="">Todas las campañas</option></select>
         <select id="m-statusFilter"><option value="">Todos los estados</option></select>
-
         <div class="code-select-wrap">
           <label for="m-codeFieldSelect">Código:</label>
           <select id="m-codeFieldSelect">
@@ -1308,25 +1295,20 @@ footer{
             <option value="productId">Content Portal ID</option>
           </select>
         </div>
-
         <div class="disc-slider-wrap">
           Desc. mín. <input type="range" id="m-discSlider" min="0" max="75" value="0" step="1"> <b id="m-discSliderVal">0%</b>
         </div>
-
         <div class="toggle-btns" id="m-sortToggle">
           <button data-sort="discountPct" class="active">Más llamativo</button>
           <button data-sort="endDate">Vence pronto</button>
           <button data-sort="campaign">A–Z campaña</button>
         </div>
-
         <button class="reset-btn" id="m-resetBtn">↺ Limpiar filtros</button>
       </div>
-
       <div class="result-bar">
         <span><b id="m-resultCount">0</b> promos encontradas</span>
         <span id="m-resultHint"></span>
       </div>
-
       <div class="table-wrap">
         <table>
           <thead>
@@ -1350,13 +1332,10 @@ footer{
           <div>Prueba ajustando los filtros o el texto de búsqueda.</div>
         </div>
       </div>
-
       <div class="pager" id="m-pager"></div>
     </section>
-
     <footer>Fuente: Google Sheets en vivo (calendario comercial TURBO CL) — pestañas Supply_Data 2026_Q1Q2 y Supply_Data_2026_Q3Q4 · Generado para uso interno</footer>
   </main>
-
   <div id="m-detailOverlay" class="detail-overlay" aria-hidden="true">
     <div class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="m-detailModalTitle">
       <button id="m-detailCloseBtn" class="detail-close" aria-label="Cerrar">✕</button>
@@ -1367,7 +1346,7 @@ footer{
 
 <!-- TAB 2: WMS -->
 <div class="tab-panel" id="tab-wms">
-  <div style="padding:16px 24px; background:var(--hero,#5B2A9D); display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+  <div style="padding:16px 24px;background:var(--turbo-violet);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
     <div class="week-select-wrap">
       📅 Semana:
       <select id="w-weekSelect">
@@ -1382,21 +1361,16 @@ footer{
       <span class="generated-stamp" id="w-generatedStamp">Generado: —</span>
     </div>
   </div>
-
   <div class="snapshot-note" id="w-snapshotNote">⚠ Esta vista es una FOTO al momento de generarla — no se actualiza sola.</div>
-
   <div class="legend">
     <div class="legend-item"><span class="legend-dot" style="background:var(--ok)"></span> Cargado en WMS (campaña manual activa)</div>
     <div class="legend-item"><span class="legend-dot" style="background:var(--warn)"></span> Solo promo automática (por vencimiento)</div>
     <div class="legend-item"><span class="legend-dot" style="background:var(--bad)"></span> No encontrado en WMS</div>
   </div>
-
   <main class="shell">
     <div id="w-dealsContainer"></div>
   </main>
-
   <footer>Fuente: calendario comercial (Google Sheets) + Snowflake FIVETRAN.CL_AMYSQL_TURBO_EMERGENCY_ORDER_TURBO_PROMOTION_ENGINE · Generado para uso interno</footer>
-
   <div id="w-detailOverlay" class="detail-overlay" aria-hidden="true">
     <div class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="w-detailModalTitle">
       <button id="w-detailCloseBtn" class="detail-close" aria-label="Cerrar">✕</button>
