@@ -118,36 +118,6 @@ h1 em{
 }
 .hero-meta b{ color: white; }
 
-
-/* ============ TAB NAVIGATION ============ */
-.tab-nav{
-  display:flex;
-  gap: 4px;
-  margin-top: 22px;
-  position: relative;
-  z-index: 1;
-}
-.tab-btn{
-  font-family: var(--mono);
-  font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  padding: 9px 18px;
-  border: none;
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.65);
-  border-radius: 9px 9px 0 0;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.tab-btn:hover{ background: rgba(255,255,255,0.14); color: white; }
-.tab-btn.active{
-  background: var(--paper);
-  color: var(--turbo-violet-deep);
-}
-.tab-panel{ display:none; }
-.tab-panel.active{ display:block; }
-
 /* KPI strip */
 .kpi-row{
   display:grid;
@@ -397,6 +367,54 @@ h1 em{
   position:absolute; left:11px; top:50%; transform:translateY(-50%);
   width:15px; height:15px;
   color: var(--mute);
+}
+
+.date-range-wrap{
+  display:flex;
+  align-items:center;
+  gap: 6px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 7px 11px;
+  flex-shrink: 0;
+}
+.date-range-label{
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--mute);
+  white-space: nowrap;
+}
+.date-range-wrap input[type=date]{
+  border: none;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+  width: 110px;
+}
+.date-range-sep{
+  color: var(--mute);
+  font-size: 12px;
+}
+.date-clear-btn{
+  border: none;
+  background: none;
+  color: var(--mute);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 2px;
+  line-height: 1;
+  display: none;
+}
+.date-clear-btn.visible{ display: inline; }
+.date-clear-btn:hover{ color: var(--bad); }
+.date-range-wrap.active{
+  border-color: var(--turbo-violet);
+  background: var(--paper-dim);
 }
 select, .chip-select{
   padding: 9px 12px;
@@ -840,21 +858,46 @@ footer{
 
 ::selection{ background: var(--turbo-yellow); color: var(--ink); }
 
+/* TAB NAV */
+.tab-nav{ display:flex; gap:4px; margin-top:22px; position:relative; z-index:1; }
+.tab-btn{ font-family:var(--mono); font-size:12.5px; font-weight:700; padding:9px 18px; border:none; background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.65); border-radius:9px 9px 0 0; cursor:pointer; transition:background 0.15s,color 0.15s; }
+.tab-btn:hover{ background:rgba(255,255,255,0.14); color:white; }
+.tab-btn.active{ background:var(--paper); color:var(--turbo-violet-deep); }
+.tab-panel{ display:none; }
+.tab-panel.active{ display:block; }
+
 </style>
 <style>
 
-*{ box-sizing: border-box; }
 body{
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--paper);
   color: var(--ink);
   margin: 0;
 }
+.hero{
+  background: linear-gradient(160deg, var(--turbo-violet-deep), var(--turbo-violet) 65%, #7A3FC4);
+  color: white;
+  padding: 30px 24px 26px;
+}
+.eyebrow{
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--turbo-yellow);
+  font-weight: 700;
+}
 h1{
   font-family: var(--display);
   font-size: clamp(24px, 4vw, 34px);
   margin: 6px 0 6px;
   letter-spacing: -0.01em;
+}
+.hero-sub{
+  color: rgba(255,255,255,0.78);
+  font-size: 13.5px;
+  max-width: 560px;
 }
 .week-badge{
   display:inline-flex;
@@ -870,19 +913,11 @@ h1{
 }
 .week-badge b{ color: var(--turbo-yellow); }
 
-.week-select-wrap-row{
-  display:flex;
-  align-items:center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 14px;
-}
-
 .week-select-wrap{
   display:inline-flex;
   align-items:center;
   gap: 8px;
-  margin-top: 0;
+  margin-top: 14px;
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.2);
   padding: 7px 14px;
@@ -910,6 +945,17 @@ h1{
   gap: 10px;
   margin-top: 14px;
   flex-wrap: wrap;
+}
+.refresh-btn{
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--turbo-violet-deep);
+  background: var(--turbo-yellow);
+  border: none;
+  padding: 7px 13px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 .refresh-btn:hover{ transform: translateY(-1px); }
 .generated-stamp{
@@ -939,6 +985,7 @@ h1{
 .legend-item{ display:flex; align-items:center; gap: 6px; }
 .legend-dot{ width: 9px; height: 9px; border-radius: 50%; flex-shrink:0; }
 
+.shell{ max-width: 1000px; margin: 0 auto; padding: 24px; }
 
 .deal-card{
   background: white;
@@ -1029,24 +1076,134 @@ footer{
 }
 
 /* ============ DETAIL MODAL ============ */
+.detail-overlay{
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(24, 18, 33, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
 .detail-overlay.open{ display: flex; }
 
+.detail-modal{
+  background: white;
+  border-radius: 18px;
+  max-width: 540px;
+  width: 100%;
+  max-height: 86vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 30px 60px -20px rgba(24,18,33,0.4);
+}
+.detail-close{
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.18);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 1;
+}
 .detail-close:hover{ background: rgba(255,255,255,0.3); }
 
+.detail-header{
+  background: linear-gradient(160deg, var(--turbo-violet-deep), var(--turbo-violet));
+  color: white;
+  padding: 24px 24px 18px;
+  border-radius: 18px 18px 0 0;
+}
 .detail-rank-disc{
   display:flex;
   align-items:baseline;
   gap: 10px;
+}
+.detail-disc{
+  font-family: var(--display);
+  font-size: 38px;
+  color: var(--turbo-yellow);
+  line-height: 1;
 }
 .detail-rank-tag{
   font-family: var(--mono);
   font-size: 12px;
   color: rgba(255,255,255,0.65);
 }
+.detail-product{
+  font-size: 17px;
+  font-weight: 700;
+  margin-top: 8px;
+  line-height: 1.3;
+}
+.detail-maker-campaign{
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.78);
+  margin-top: 6px;
+}
 
+.detail-body{ padding: 20px 24px 24px; }
+.detail-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.detail-field{
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
 .detail-field.full{ grid-column: 1 / -1; }
+.detail-field-label{
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mute);
+  margin-bottom: 4px;
+}
+.detail-field-val{ font-size: 13.5px; font-weight: 600; color: var(--ink); }
 .detail-field-val.mono{ font-family: var(--mono); font-size: 12.5px; font-weight: 500; }
 
+.detail-section-title{
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--turbo-violet);
+  margin: 16px 0 8px;
+}
+.detail-codes{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.detail-code-box{
+  background: var(--paper-dim);
+  border-radius: 9px;
+  padding: 9px 10px;
+  text-align: center;
+}
+.detail-code-label{
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--mute);
+  text-transform: uppercase;
+}
+.detail-code-val{
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 3px;
+  word-break: break-all;
+}
 
 .detail-wms-status{ margin-top: 16px; }
 
@@ -1070,7 +1227,9 @@ footer{
 }
 
 @media (max-width: 600px){
-    }
+  .detail-grid{ grid-template-columns: 1fr; }
+  .detail-codes{ grid-template-columns: 1fr; }
+}
 
 </style>
 </head>
@@ -1086,9 +1245,7 @@ footer{
       <h1>Radar de descuentos <em>orgánicos</em></h1>
       <p class="hero-sub" id="heroSubGlobal">Vista unificada del calendario comercial 2026: detecta de un vistazo qué campañas traen el descuento más fuerte, quién las financia y si ya quedaron cargadas en sistema.</p>
     </div>
-    <div class="hero-meta" id="m-heroMeta">
-      Cargando datos…
-    </div>
+    <div class="hero-meta" id="m-heroMeta">Cargando datos…</div>
   </div>
 
   <div class="kpi-row" id="m-kpiRow"></div>
@@ -1104,16 +1261,15 @@ footer{
   </nav>
 </header>
 
-<!-- ============ TAB 1: PLANIFICADO (dashboard principal, en vivo) ============ -->
+<!-- TAB 1: PLANIFICADO -->
 <div class="tab-panel active" id="tab-planificado">
 
   <div id="m-loadStatus" class="load-status">
     <span class="load-spinner"></span>
-    <span class="load-status-text">Cargando promociones desde Google Sheets…</span>
+    <span class="load-status-text">Cargando promociones desde Google Sheets… puede tardar hasta 20-30 segundos.</span>
   </div>
 
   <main class="shell">
-
     <section>
       <div class="section-head">
         <div class="section-title" id="m-spotlightTitle">🔥 Top descuentos del semestre</div>
@@ -1129,29 +1285,20 @@ footer{
           <input type="text" id="m-searchInput" placeholder="Buscar producto, EAN, Sync, Content Portal ID, maker o campaña…">
         </div>
 
-        <select id="m-yearFilter">
-          <option value="">Todos los años</option>
-        </select>
+        <div class="date-range-wrap">
+          <span class="date-range-label">Vigente entre:</span>
+          <input type="date" id="m-dateFrom" title="Desde">
+          <span class="date-range-sep">—</span>
+          <input type="date" id="m-dateTo" title="Hasta">
+          <button id="m-dateClearBtn" class="date-clear-btn" title="Limpiar rango de fechas">✕</button>
+        </div>
 
-        <select id="m-quarterFilter">
-          <option value="">Todos los trimestres</option>
-        </select>
-
-        <select id="m-monthFilter">
-          <option value="">Todos los meses</option>
-        </select>
-
-        <select id="m-makerFilter">
-          <option value="">Todos los makers</option>
-        </select>
-
-        <select id="m-campaignFilter">
-          <option value="">Todas las campañas</option>
-        </select>
-
-        <select id="m-statusFilter">
-          <option value="">Todos los estados</option>
-        </select>
+        <select id="m-yearFilter"><option value="">Todos los años</option></select>
+        <select id="m-quarterFilter"><option value="">Todos los trimestres</option></select>
+        <select id="m-monthFilter"><option value="">Todos los meses</option></select>
+        <select id="m-makerFilter"><option value="">Todos los makers</option></select>
+        <select id="m-campaignFilter"><option value="">Todas las campañas</option></select>
+        <select id="m-statusFilter"><option value="">Todos los estados</option></select>
 
         <div class="code-select-wrap">
           <label for="m-codeFieldSelect">Código:</label>
@@ -1207,9 +1354,7 @@ footer{
       <div class="pager" id="m-pager"></div>
     </section>
 
-    <footer>
-      Fuente: Google Sheets en vivo (calendario comercial TURBO CL) — pestañas Supply_Data 2026_Q1Q2 y Supply_Data_2026_Q3Q4 · Generado para uso interno
-    </footer>
+    <footer>Fuente: Google Sheets en vivo (calendario comercial TURBO CL) — pestañas Supply_Data 2026_Q1Q2 y Supply_Data_2026_Q3Q4 · Generado para uso interno</footer>
   </main>
 
   <div id="m-detailOverlay" class="detail-overlay" aria-hidden="true">
@@ -1218,13 +1363,11 @@ footer{
       <div id="m-detailModalBody"></div>
     </div>
   </div>
-
 </div>
 
-<!-- ============ TAB 2: VERIFICADO EN WMS (vista semanal, snapshot) ============ -->
+<!-- TAB 2: WMS -->
 <div class="tab-panel" id="tab-wms">
-
-  <div class="week-select-wrap-row">
+  <div style="padding:16px 24px; background:var(--hero,#5B2A9D); display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
     <div class="week-select-wrap">
       📅 Semana:
       <select id="w-weekSelect">
@@ -1240,9 +1383,7 @@ footer{
     </div>
   </div>
 
-  <div class="snapshot-note" id="w-snapshotNote">
-    ⚠ Esta vista es una FOTO al momento de generarla — no se actualiza sola.
-  </div>
+  <div class="snapshot-note" id="w-snapshotNote">⚠ Esta vista es una FOTO al momento de generarla — no se actualiza sola.</div>
 
   <div class="legend">
     <div class="legend-item"><span class="legend-dot" style="background:var(--ok)"></span> Cargado en WMS (campaña manual activa)</div>
@@ -1254,9 +1395,7 @@ footer{
     <div id="w-dealsContainer"></div>
   </main>
 
-  <footer>
-    Fuente: calendario comercial (Google Sheets) + Snowflake FIVETRAN.CL_AMYSQL_TURBO_EMERGENCY_ORDER_TURBO_PROMOTION_ENGINE · Generado para uso interno
-  </footer>
+  <footer>Fuente: calendario comercial (Google Sheets) + Snowflake FIVETRAN.CL_AMYSQL_TURBO_EMERGENCY_ORDER_TURBO_PROMOTION_ENGINE · Generado para uso interno</footer>
 
   <div id="w-detailOverlay" class="detail-overlay" aria-hidden="true">
     <div class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="w-detailModalTitle">
@@ -1264,11 +1403,9 @@ footer{
       <div id="w-detailModalBody"></div>
     </div>
   </div>
-
 </div>
 
 <script>
-// ---------- tab switching ----------
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const tabKey = btn.dataset.tab;
@@ -1276,15 +1413,14 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + tabKey).classList.add('active');
-
-    // toggle hero copy + refresh row visibility to match the active tab,
-    // since the two tabs have different "what is this" framing
+    const sub = document.getElementById('heroSubGlobal');
+    const rr = document.getElementById('mainRefreshRow');
     if(tabKey === 'planificado'){
-      document.getElementById('heroSubGlobal').textContent = 'Vista unificada del calendario comercial 2026: detecta de un vistazo qué campañas traen el descuento más fuerte, quién las financia y si ya quedaron cargadas en sistema.';
-      document.getElementById('mainRefreshRow').style.display = '';
+      sub.textContent = 'Vista unificada del calendario comercial 2026: detecta de un vistazo qué campañas traen el descuento más fuerte, quién las financia y si ya quedaron cargadas en sistema.';
+      rr.style.display = '';
     } else {
-      document.getElementById('heroSubGlobal').textContent = 'Los descuentos más fuertes planificados cada semana, verificados contra lo que efectivamente está cargado en WMS — para comunicar con confianza solo lo que ya está activo.';
-      document.getElementById('mainRefreshRow').style.display = 'none';
+      sub.textContent = 'Los descuentos más fuertes planificados cada semana, verificados contra lo que efectivamente está cargado en WMS — para comunicar con confianza solo lo que ya está activo.';
+      rr.style.display = 'none';
     }
   });
 });
@@ -1668,6 +1804,8 @@ let state = {
   status: '',
   minDisc: 0,
   codeField: 'ean',
+  dateFrom: '',
+  dateTo: '',
   sortCol: 'discountPct',
   sortDir: 'desc',
   page: 1,
@@ -1686,6 +1824,8 @@ function spotlightFilteredRows(){
   if(state.maker) rows = rows.filter(d => d.maker === state.maker);
   if(state.campaign) rows = rows.filter(d => d.campaign === state.campaign);
   if(state.status) rows = rows.filter(d => d.status === state.status);
+  if(state.dateFrom) rows = rows.filter(d => d.endDate && d.endDate >= state.dateFrom);
+  if(state.dateTo)   rows = rows.filter(d => d.startDate && d.startDate <= state.dateTo);
   return rows;
 }
 
@@ -1760,6 +1900,10 @@ function applyFilters(){
   if(state.campaign) rows = rows.filter(d => d.campaign === state.campaign);
   if(state.status) rows = rows.filter(d => d.status === state.status);
   if(state.minDisc > 0) rows = rows.filter(d => d.discountPct != null && d.discountPct >= state.minDisc);
+  // Date range: show promos whose vigency overlaps with [dateFrom, dateTo].
+  // A promo overlaps if it starts before or on dateTo AND ends on or after dateFrom.
+  if(state.dateFrom) rows = rows.filter(d => d.endDate && d.endDate >= state.dateFrom);
+  if(state.dateTo)   rows = rows.filter(d => d.startDate && d.startDate <= state.dateTo);
 
   rows = [...rows].sort((a,b) => {
     let av = a[state.sortCol], bv = b[state.sortCol];
@@ -1787,7 +1931,7 @@ function openSpotDetail(d){
   document.getElementById('m-detailModalBody').innerHTML = `
     <div class="detail-header">
       <div class="detail-disc">${d.discountPct.toFixed(0)}%</div>
-      <div class="detail-product" id="detailModalTitle">${escapeHtml(d.productName)}</div>
+      <div class="detail-product" id="m-detailModalTitle">${escapeHtml(d.productName)}</div>
       <div class="detail-maker-campaign">${escapeHtml(d.maker || 'Maker no especificado')} · ${escapeHtml(d.campaign)}</div>
     </div>
     <div class="detail-body">
@@ -1973,6 +2117,37 @@ document.getElementById('m-codeFieldSelect').addEventListener('change', e => {
   state.codeField = e.target.value;
   renderTable();
 });
+
+function updateDateRangeUI(){
+  const wrap = document.getElementById('m-dateFrom').closest('.date-range-wrap');
+  const clearBtn = document.getElementById('m-dateClearBtn');
+  const hasDate = state.dateFrom || state.dateTo;
+  wrap.classList.toggle('active', !!hasDate);
+  clearBtn.classList.toggle('visible', !!hasDate);
+}
+
+document.getElementById('m-dateFrom').addEventListener('change', e => {
+  state.dateFrom = e.target.value;
+  state.page = 1;
+  updateDateRangeUI();
+  renderTable();
+});
+document.getElementById('m-dateTo').addEventListener('change', e => {
+  state.dateTo = e.target.value;
+  state.page = 1;
+  updateDateRangeUI();
+  renderTable();
+});
+document.getElementById('m-dateClearBtn').addEventListener('click', () => {
+  state.dateFrom = '';
+  state.dateTo = '';
+  document.getElementById('m-dateFrom').value = '';
+  document.getElementById('m-dateTo').value = '';
+  state.page = 1;
+  updateDateRangeUI();
+  renderTable();
+});
+
 document.getElementById('m-discSlider').addEventListener('input', e => {
   state.minDisc = parseInt(e.target.value, 10);
   document.getElementById('m-discSliderVal').textContent = state.minDisc + '%';
@@ -2008,8 +2183,11 @@ document.querySelectorAll('thead th').forEach(th => {
 });
 
 document.getElementById('m-resetBtn').addEventListener('click', () => {
-  state = {search:'', year:'', quarter:'', month:'', maker:'', campaign:'', status:'', minDisc:0, codeField:'ean', sortCol:'discountPct', sortDir:'desc', page:1, pageSize:50};
+  state = {search:'', year:'', quarter:'', month:'', maker:'', campaign:'', status:'', minDisc:0, codeField:'ean', dateFrom:'', dateTo:'', sortCol:'discountPct', sortDir:'desc', page:1, pageSize:50};
   document.getElementById('m-searchInput').value = '';
+  document.getElementById('m-dateFrom').value = '';
+  document.getElementById('m-dateTo').value = '';
+  updateDateRangeUI();
   refreshDependentFilters();
   populateStatusFilter();
   document.getElementById('m-discSlider').value = 0;
