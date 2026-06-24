@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es-CL">
 <head>
 <meta charset="UTF-8">
@@ -1149,6 +1149,71 @@ h1{
 .wms-status.no_encontrado{ background: var(--bad-bg); color: var(--bad); }
 .wms-status.no_encontrado::before{ background: var(--bad); }
 
+/* ============ CAMPAIGNS TAB ============ */
+.cms-controls{
+  padding: 14px 24px;
+  background: var(--turbo-violet);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.cms-search{
+  flex: 1;
+  min-width: 180px;
+  max-width: 300px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+}
+.cms-search:focus{ outline: none; border-color: var(--turbo-yellow); }
+.cms-stats-bar{
+  display: flex;
+  gap: 24px;
+  padding: 10px 24px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.cms-stat{ display: flex; flex-direction: column; align-items: center; }
+.cms-stat-val{ font-size: 17px; font-weight: 700; color: var(--text); font-family: var(--mono); }
+.cms-stat-lbl{ font-size: 10px; color: var(--mute); text-transform: uppercase; letter-spacing: .05em; }
+.cms-note{
+  padding: 7px 24px;
+  font-size: 11.5px;
+  color: var(--mute);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.cms-table-wrap{ overflow-x: auto; padding: 0 24px 24px; }
+.cms-table{ width: 100%; border-collapse: collapse; font-size: 13px; }
+.cms-table thead th{
+  text-align: left;
+  padding: 9px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--mute);
+  border-bottom: 1.5px solid var(--border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+}
+.cms-table td{ padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.cms-table tbody tr:hover td{ background: rgba(255,255,255,.03); }
+.cms-td-name{ font-weight: 500; color: var(--text); min-width: 200px; }
+.cms-td-date{ font-family: var(--mono); font-size: 12px; color: var(--mute); white-space: nowrap; }
+.cms-td-num{ font-family: var(--mono); font-size: 12px; text-align: right; color: var(--text); }
+.cms-gmv{ font-family: var(--mono); font-size: 12px; text-align: right; color: var(--ok); font-weight: 600; }
+.cms-muted{ font-family: var(--mono); font-size: 12px; text-align: right; color: var(--mute); }
+.cms-nodata{ padding: 48px; text-align: center; color: var(--mute); font-size: 14px; }
+
 footer{
   text-align:center;
   padding: 24px;
@@ -1339,7 +1404,7 @@ footer{
   </div>
   <nav class="tab-nav">
     <button class="tab-btn active" data-tab="planificado">📋 Planificado (Calendario)</button>
-    <button class="tab-btn" data-tab="wms">✅ Verificado en WMS</button>
+    <button class="tab-btn" data-tab="wms">📊 Campañas en CMS</button>
   </nav>
 </header>
 <div class="tab-panel active" id="tab-planificado">
@@ -1438,35 +1503,31 @@ footer{
   </div>
 </div>
 <div class="tab-panel" id="tab-wms">
-  <div style="padding:16px 24px;background:var(--turbo-violet);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-    <div class="week-select-wrap">
-      📅 Semana:
-      <select id="w-weekSelect">
-        <option value="2026-06-15_2026-06-21">15 — 21 junio 2026 (actual)</option>
-        <option value="2026-06-22_2026-06-28">22 — 28 junio 2026</option>
-        <option value="2026-06-29_2026-07-05">29 jun — 5 julio 2026</option>
-        <option value="2026-07-06_2026-07-12">6 — 12 julio 2026</option>
-      </select>
-    </div>
-    <div class="refresh-row" style="margin-top:0;">
-      <button id="w-refreshBtn" class="refresh-btn">⟳ Pedir actualización</button>
-      <span class="generated-stamp" id="w-generatedStamp">Generado: —</span>
-    </div>
+  <div class="cms-controls">
+    <input type="search" id="c-search" class="cms-search" placeholder="Buscar campaña…" autocomplete="off">
+    <div class="month-pills" id="c-monthPills" style="flex:1;justify-content:flex-end;flex-wrap:wrap;"></div>
   </div>
-  <div class="snapshot-note" id="w-snapshotNote">⚠ Esta vista es una FOTO al momento de generarla — no se actualiza sola.</div>
-  <div class="legend">
-    <div class="legend-item"><span class="legend-dot" style="background:var(--ok)"></span> Cargado en WMS (campaña manual activa)</div>
-    <div class="legend-item"><span class="legend-dot" style="background:var(--warn)"></span> Solo promo automática (por vencimiento)</div>
-    <div class="legend-item"><span class="legend-dot" style="background:var(--bad)"></span> No encontrado en WMS</div>
+  <div class="cms-stats-bar" id="c-statsBar"></div>
+  <div class="cms-note">Performance disponible solo para campañas cargadas como Global Offer (manual-maker / onlinereseller). Las campañas del calendario orgánico muestran "—" en GMV — se cargan a nivel producto, no como GO.</div>
+  <div class="cms-table-wrap">
+    <table class="cms-table">
+      <thead>
+        <tr>
+          <th>Campaña</th>
+          <th>Inicio</th>
+          <th>Fin</th>
+          <th style="text-align:right">GOs</th>
+          <th style="text-align:right">GMV CL</th>
+          <th style="text-align:right">Órdenes</th>
+          <th style="text-align:right">Burn Maker</th>
+          <th style="text-align:right">Burn Rappi</th>
+        </tr>
+      </thead>
+      <tbody id="c-tbody"></tbody>
+    </table>
+    <div id="c-nodata" class="cms-nodata" style="display:none">Sin resultados para este filtro.</div>
   </div>
-  <main class="shell"><div id="w-dealsContainer"></div></main>
-  <footer>Fuente: calendario comercial (Google Sheets) + Snowflake FIVETRAN.CL_AMYSQL_TURBO_EMERGENCY_ORDER_TURBO_PROMOTION_ENGINE · Generado para uso interno</footer>
-  <div id="w-detailOverlay" class="detail-overlay" aria-hidden="true">
-    <div class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="w-detailModalTitle">
-      <button id="w-detailCloseBtn" class="detail-close" aria-label="Cerrar">✕</button>
-      <div id="w-detailModalBody"></div>
-    </div>
-  </div>
+  <footer>Fuente: Snowflake PROMOTION_ENGINE · CPGS_LOCAL_ANALYTICS · snapshot al 23 jun 2026 · Campañas mar–jun 2026</footer>
 </div>
 <script>
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -2501,183 +2562,484 @@ loadAndRender(false);
 
 })();</script>
 <script>(function(){
+const CAMPS=[
+["MIERCOLES DE LIMPIEZA TURBO","2026-02-12","2026-02-25",1,0,0,0,0],
+["CICLO MARZO COCA COLA","2026-03-10","2026-04-01",1186,0,0,0,0],
+["ALWAYS ON MARZO NESTLE DESPENSA","2026-03-12","2026-04-01",41,0,0,0,0],
+["ALWAYS ON MARZO NESTLE HELADOS","2026-03-12","2026-04-01",42,0,0,0,0],
+["ALWAYS ON MARZO NESTLE HELADOS 2","2026-03-12","2026-04-01",1,0,0,0,0],
+["ALWAYS ON MARZO ONLINESELLER","2026-03-12","2026-04-01",30,0,0,0,0],
+["BACK TO SCHOOL ONLINESELLER","2026-03-12","2026-03-16",34,0,0,0,0],
+["CAROZZI MENSUAL CAROZZI","2026-03-12","2026-04-01",44,0,0,0,0],
+["DRANO CON 20% DSCTO","2026-03-12","2026-04-01",15,0,0,0,0],
+["MENSUL CARIBE MARZO","2026-03-12","2026-04-01",34,0,0,0,0],
+["MR. MUSCULO VIDRIOS/ANTIGRASA 25% DSCTO","2026-03-12","2026-04-01",32,0,0,0,0],
+["RAPPIPALOOZA NESTLE","2026-03-12","2026-03-16",40,0,0,0,0],
+["TODO GLADE ACEITE Y AUTOMATICO 25% DSCTO","2026-03-12","2026-04-01",39,0,0,0,0],
+["TODO PATO A 25% DSCTO","2026-03-12","2026-04-01",44,0,0,0,0],
+["TODO RAID AEROSOL 20% DSCTO","2026-03-12","2026-04-01",40,0,0,0,0],
+["TODO RAID ELECTRICO 25% DSCTO","2026-03-12","2026-04-01",35,0,0,0,0],
+["TODO VARITAS GLADE 20% DSCTO","2026-03-12","2026-04-01",22,0,0,0,0],
+["TODO ZIPLOC A 25% DSCTO","2026-03-12","2026-04-01",39,0,0,0,0],
+["ALEAYS ON MARZO IDEAL","2026-03-16","2026-04-01",7,0,0,0,0],
+["ALWAYS ON CAFE CARIBE MARZO","2026-03-16","2026-04-01",16,0,0,0,0],
+["ALWAYS ON MARZO ICB","2026-03-16","2026-04-01",14,0,0,0,0],
+["ALWAYS ON MARZO PIBAMOUR","2026-03-16","2026-04-01",13,0,0,0,0],
+["ALWAYS ON MARZO PROMERCO","2026-03-16","2026-04-01",13,0,0,0,0],
+["ALWAYS ON MARZO TMLUC","2026-03-16","2026-04-01",13,0,0,0,0],
+["ALWAYS ON MARZO TUCAPEL","2026-03-16","2026-04-01",15,0,0,0,0],
+["ALWAYS ON MINUTO VERDE ALIFRUIT","2026-03-16","2026-04-01",5,0,0,0,0],
+["ALWAYS ON QUILLAYES QUILLAYES","2026-03-16","2026-04-01",24,0,0,0,0],
+["BACK TO SCHOOL RECETAS DESAYUNO WINKLER","2026-03-16","2026-04-01",1,0,0,0,0],
+["CAMPANA LA CRIANZA MARZO AGROSUPER","2026-03-16","2026-04-01",9,0,0,0,0],
+["CAMPANA MARZO COLUN COLUN","2026-03-16","2026-04-01",25,0,0,0,0],
+["CAMPANA MARZO ECKART ECKART","2026-03-16","2026-04-01",5,0,0,0,0],
+["CAMPANA MARZO GOURMET GOURMET","2026-03-16","2026-04-01",13,0,0,0,0],
+["CAMPANA MARZO IANSA","2026-03-16","2026-04-01",4,0,0,0,0],
+["CAMPANA MARZO TRAVERSO TRAVERSO","2026-03-16","2026-04-01",5,0,0,0,0],
+["CAMPANA MARZO TRENDY","2026-03-16","2026-04-01",4,0,0,0,0],
+["CAMPANA WATTS MARZO WATTS","2026-03-16","2026-04-01",15,0,0,0,0],
+["CATALOGO MARZO BUKA","2026-03-16","2026-04-01",2,0,0,0,0],
+["DESCUENTO MENSUAL MARZO DEMARIA","2026-03-16","2026-04-01",4,0,0,0,0],
+["DESCUENTO MENSUAL MARZO DEMARIA DEMARIA","2026-03-16","2026-04-01",4,0,0,0,0],
+["DESCUENTO MENSUAL MARZO THE PINK STUFF GRAYSON","2026-03-16","2026-04-01",13,0,0,0,0],
+["DESCUENTO MENSUAL MARZO WINKLER WINKLER","2026-03-16","2026-04-01",10,0,0,0,0],
+["DESCUENTO MENSUAL PROA PROA","2026-03-16","2026-04-01",3,0,0,0,0],
+["KIT ANTI CANA PRE CON TURBO WINKLER","2026-03-16","2026-04-01",1,0,0,0,0],
+["MARZO - ABRIL VIRUTEX","2026-03-16","2026-04-01",3,0,0,0,0],
+["MARZO A JULIO LIQUIDACION VIRUTEX","2026-03-16","2026-04-01",2,0,0,0,0],
+["MARZO CINTA AZUL","2026-03-16","2026-04-01",3,0,0,0,0],
+["MARZO IDEAL","2026-03-16","2026-04-01",6,0,0,0,0],
+["MENSUAL MARLEY MARZO MARLEY (DICALLA)","2026-03-16","2026-04-01",2,0,0,0,0],
+["MENSUAL TIKA TIKA","2026-03-16","2026-04-01",4,0,0,0,0],
+["PEPSICO MARZO PEPSICO","2026-03-16","2026-04-01",17,0,0,0,0],
+["TACTICO NUTRISCO MARZO NUTRISCO","2026-03-16","2026-04-01",10,0,0,0,0],
+["TACTICO SEGAFREDO MARZO SEGAFREDO","2026-03-16","2026-04-01",5,0,0,0,0],
+["TACTICO SOHO MARZO SOHO","2026-03-16","2026-03-23",1,0,0,0,0],
+["EXTRA MARZO IDEAL","2026-03-17","2026-04-01",16,0,0,0,0],
+["PEPSICO MARZO","2026-03-17","2026-04-01",12,0,0,0,0],
+["CAC DEAL SENOR K","2026-03-18","2026-03-19",4,0,0,0,0],
+["MARZO - ABRIL CASTANO","2026-03-18","2026-04-01",15,0,0,0,0],
+["ALWAYS ON BOGATI","2026-03-19","2026-04-01",14,0,0,0,0],
+["CAROZZI MENSUAL","2026-03-19","2026-04-01",14,0,0,0,0],
+["PRE CON TURBO / SALUD SEXUAL PRATER","2026-03-19","2026-03-29",4,0,0,0,0],
+["MONSTER PACK DESCUENTO ANDINA","2026-03-20","2026-04-01",13,0,0,0,0],
+["MONSTER PACK DESCUENTO EMBONOR","2026-03-20","2026-04-01",13,0,0,0,0],
+["PRE CON TURBO CAROZZI","2026-03-20","2026-06-21",63,0,0,0,0],
+["MARZO PURI","2026-03-23","2026-04-01",10,0,0,0,0],
+["TACTICO SENOR K MARZO","2026-03-23","2026-04-01",10,0,0,0,0],
+["TACTICO UNDERFIVE MARZO","2026-03-23","2026-03-27",5,0,0,0,0],
+["ABRIL MENSUAL IANSA","2026-04-01","2026-05-01",53,0,0,0,0],
+["ALWAYS ON ABRIL TUCAPEL","2026-04-01","2026-05-01",54,0,0,0,0],
+["ALWAYS ON NESTLE ABRIL DESPENSA","2026-04-01","2026-05-01",88,3.97,172,0,0.004],
+["ALWAYS ON NESTLE ABRIL HELADOS","2026-04-01","2026-05-01",2765,0,0,0,0],
+["ALWAYS ON PIBAMOUR ABRIL","2026-04-01","2026-05-01",54,0,0,0,0],
+["ALWAYS ON TMLUC ABRIL","2026-04-01","2026-05-01",148,0,0,0,0],
+["CAMPANA ABRIL ECKART","2026-04-01","2026-05-01",24,0,0,0,0],
+["CAMPANA ABRIL GOURMET","2026-04-01","2026-05-01",124,0,0,0,0],
+["CAMPANA ABRIL IDEAL","2026-04-01","2026-05-01",54,0,0,0,0],
+["CAMPANA NUSTRICO CONGELADO SEMANA SANTA","2026-04-01","2026-04-06",5,0,0,0,0],
+["CAMPANAS PEPSICO","2026-04-01","2026-05-01",44,0,0,0,0],
+["CAROZZI ABRIL ALWAYS ON","2026-04-01","2026-05-01",264,0,0,0,0],
+["CATALOGO MENSUAL ONLINERESELLER","2026-04-01","2026-05-01",26,3.01,152,0,0.003],
+["CICLO ABRIL COCA COLA","2026-04-01","2026-05-01",2439,0,0,0,0],
+["ECOVIDA ABRIL","2026-04-01","2026-05-01",30,0,0,0,0],
+["LIQUIDACION EASTER CAROZZI","2026-04-01","2026-05-01",7,0,0,0,0],
+["MENSUAL BUKA ABRIL","2026-04-01","2026-05-01",18,0,0,0,0],
+["NUTRISCO SEMANA SANTA","2026-04-01","2026-04-06",5,0,0,0,0],
+["PRE CON TURBO ABRIL BUKA","2026-04-01","2026-05-01",6,0,0,0,0],
+["PRE CON TURBO ABRIL CAROZZI","2026-04-01","2026-05-01",19,0,0,0,0],
+["PRE CON TURBO ABRIL NESTLE DESPENSA","2026-04-01","2026-05-01",6,0,0,0,0],
+["PRE CON TURBO ABRIL NESTLE HELADOS","2026-04-01","2026-05-01",16,0,0,0,0],
+["PRE CON TURBO ABRIL NUTRISCO","2026-04-01","2026-05-01",4,0,0,0,0],
+["PRE CON TURBO ABRIL PRATER","2026-04-01","2026-05-01",6,0,0,0,0],
+["EASTER PROMERCO","2026-04-02","2026-04-07",1,0,0,0,0],
+["CAMPANA HUEVITOS ONLINERESELLER","2026-04-04","2026-04-07",2,13.68,686,0,0.033],
+["EASTER ARCOR","2026-04-05","2026-04-07",1,0,0,0,0],
+["ALWAYS ON CAFE CARIBE ABRIL","2026-04-06","2026-05-01",72,0,0,0,0],
+["CAMPANA SELL IN SOPROLE ABRIL","2026-04-06","2026-04-24",51,0,0,0,0],
+["CAMPANA WATTS ABRIL","2026-04-06","2026-05-01",119,0,0,0,0],
+["CLEAN&CARE GRAYSON","2026-04-06","2026-04-13",15,0,0,0,0],
+["CLEAN&CARE HBC","2026-04-06","2026-04-13",8,0,0,0,0],
+["CLEAN&CARE SCJ","2026-04-06","2026-04-13",33,0,0,0,0],
+["CLEAN&CARE VIRUTEX","2026-04-06","2026-04-13",70,0,0,0,0],
+["EASTER CAROZZI LIQUIDACION","2026-04-06","2026-05-01",26,0,0,0,0],
+["PRE CON TURBO Q2 ELECTROLIT","2026-04-06","2026-07-01",17,0,0,0,0],
+["SCJ ABRIL","2026-04-06","2026-05-01",188,0,0,0,0],
+["ALWAYS ON ICB ABRIL","2026-04-07","2026-05-01",117,0,0,0,0],
+["ALWAYS ON MARLEY COFFE ABRIL","2026-04-07","2026-05-01",79,0,0,0,0],
+["CAMPANA SELL IN ABRIL COLUN","2026-04-07","2026-05-01",2,0,0,0,0],
+["CAMPANAS PEPSICO ABRIL","2026-04-07","2026-04-20",14,0,0,0,0],
+["MENSUAL TIKA ABRIL","2026-04-07","2026-05-01",25,0,0,0,0],
+["CAMPANA SUPER POLLO AGROSUPER ABRIL","2026-04-10","2026-04-26",68,0,0,0,0],
+["CICLO CCU Q2","2026-04-10","2026-07-01",764,0,0,0,0],
+["TACTICO QUINCENAL NUTRISCO","2026-04-10","2026-04-21",26,0,0,0,0],
+["CAMPANA EN LINEA ESPECIAL ABRIL ECKART","2026-04-13","2026-04-20",12,0,0,0,0],
+["CICLO MENSUAL DESA","2026-04-13","2026-07-01",190,0,0,0,0],
+["CAMPANA Q2 PROA","2026-04-14","2026-07-01",213,0,0,0,0],
+["COLACION ABRIL PURIPOP","2026-04-14","2026-04-18",225,0,0,0,0],
+["Campana Sell In Freddo Marzo-Abril","2026-04-14","2026-05-01",54,0,0,0,0],
+["COLACIONES DESAYUNOS ABRIL SENOR K","2026-04-16","2026-05-18",1143,0,0,0,0],
+["MENSUAL BUKA MAYO","2026-04-16","2026-06-01",26,0,0,0,0],
+["MENSUAL MARLEY COFFEE","2026-04-16","2026-06-30",312,0,0,0,0],
+["PRE CON TURBO ABRIL SEGAFREDO","2026-04-16","2026-04-19",8,0,0,0,0],
+["PRE CON TURBO ABRIL TIKA","2026-04-16","2026-04-19",4,0,0,0,0],
+["CAMPANA NUSTRICO CONGELADO TACTICO 2DA QUINCENA","2026-04-17","2026-04-21",5,0,0,0,0],
+["CAC DEAL VIRUTEX","2026-04-18","2026-05-19",24,0,0,0,0],
+["DOMINGO ABRIL PICOTEO PURIPOP","2026-04-19","2026-04-20",2,0,0,0,0],
+["NUTRISCO SEMANA CAC","2026-04-20","2026-04-27",140,0,0,0,0],
+["PIZZA WEEK MINUTO VERDE","2026-04-20","2026-04-27",16,0,0,0,0],
+["TURBOWEEK ABRIL SENOR K","2026-04-20","2026-04-27",368,0,0,0,0],
+["TURBOWEEK ABRIL TUCAPEL","2026-04-20","2026-04-27",728,0,0,0,0],
+["PRE CON TURBO ABRIL","2026-04-22","2026-05-01",1952,0,0,0,0],
+["DIA DEL LIBRO","2026-04-23","2026-04-24",4,0,0,0,0],
+["MARATON DE SANTIAGO","2026-04-23","2026-04-27",5,0,0,0,0],
+["PRE CON TURBO ABRIL SAGAFREDO","2026-04-23","2026-04-27",10,0,0,0,0],
+["PRECIOS LOCOS PEPSICO","2026-04-23","2026-04-27",1,0,0,0,0],
+["CAMPANA PIZZA WEEK STEFANO NARDINI","2026-04-24","2026-05-04",22,0,0,0,0],
+["PIZZA WEEK PF ALIMENTOS","2026-04-24","2026-04-30",14,0,0,0,0],
+["CAC CONDONES","2026-04-25","2026-04-26",2,0,0,0,0],
+["CAMPANA NUTRISCO CONGELADO PRO WEEK","2026-04-27","2026-05-01",5,0,0,0,0],
+["COLACIONES ABRIL","2026-04-27","2026-05-01",225,0,0,0,0],
+["DIA DE LA MADRE ABRIL LIFESTYLES","2026-04-27","2026-05-01",5,0,0,0,0],
+["DIA DE LA MADRE ABRIL PIBAMOUR","2026-04-27","2026-05-01",5,0,0,0,0],
+["DIA DE LA MADRE B.WILD","2026-04-27","2026-05-11",25,0,0,0,0],
+["DIA DE LA MADRE HBC","2026-04-27","2026-05-11",15,0,0,0,0],
+["DIA DE LA MADRE JAPI JANE","2026-04-27","2026-05-11",25,0,0,0,0],
+["NUTRISCO PROWEEK ABRIL","2026-04-27","2026-05-01",975,0,0,0,0],
+["PROWEEK ABRIL NESTLE","2026-04-27","2026-05-01",428,2.68,112,0,0.005],
+["PROWEEK ABRIL SEGAFREDO","2026-04-27","2026-05-01",5,0,0,0,0],
+["PROWEEK ABRIL SENOR K","2026-04-27","2026-05-01",160,0,0,0,0],
+["PROWEEK ABRIL TUCAPEL","2026-04-27","2026-05-01",455,0,0,0,0],
+["TACTICO ABRIL-MAYO SOHO","2026-04-27","2026-05-04",8,0,0,0,0],
+["PRE CON TURBO MAYO TIKA","2026-04-30","2026-05-31",17,0,0,0,0],
+["ALWAYS ON MAYO","2026-05-01","2026-06-01",32,0,0,0,0],
+["CAMPANA AM DULCERIA DIA DE LA MADRE","2026-05-01","2026-05-11",11,0,0,0,0],
+["CAMPANA DDM LA BARQUILLERIA","2026-05-01","2026-05-11",11,0,0,0,0],
+["CAMPANA DIA DE LA MADRE DEUBEL","2026-05-01","2026-06-01",32,0,0,0,0],
+["CAMPANA PIRULIN","2026-05-01","2026-05-31",25,0,0,0,0],
+["CATALOGO MENSUAL ONLINE RE SELLER MAYO","2026-05-01","2026-06-01",20,4.7,186,0,0.011],
+["DESAYUNO Y COLACIONES PEPSICO MAYO","2026-05-01","2026-05-31",24,0,0,0,0],
+["DIA DE LA MADRE MAYO SEGAFREDO","2026-05-01","2026-05-11",22,0,0,0,0],
+["DIA DE LA MADRE ONLISELLER","2026-05-01","2026-05-11",20,2.95,146,0,0.025],
+["ECOVIDA MAYO","2026-05-01","2026-06-01",32,0,0,0,0],
+["MAYO MENSUAL IANSA","2026-05-01","2026-06-01",96,0,0,0,0],
+["MAYO SENOR K","2026-05-01","2026-06-04",26,0,0,0,0],
+["MENSUAL GOURMET","2026-05-01","2026-05-31",186,0,0,0,0],
+["MENSUAL MAYO CAROZZI","2026-05-01","2026-06-01",288,0,0,0,0],
+["MENSUAL MAYO PEPSICO","2026-05-01","2026-05-31",24,0,0,0,0],
+["MENSUAL PROMERCO MAYO","2026-05-01","2026-06-01",157,0,0,0,0],
+["MENSUAL TIKA MAYO","2026-05-01","2026-06-01",53,0,0,0,0],
+["PRE CON TURBO MAYO CAROZZI","2026-05-01","2026-05-31",90,0,0,0,0],
+["PROMO MENSUAL GOURMET","2026-05-01","2026-05-31",93,0,0,0,0],
+["CAMPANA DIA DE LA MADRE LA CABRESA","2026-05-04","2026-05-11",8,0,0,0,0],
+["CAMPANA LE BANQUET DIA DE LA MADRE","2026-05-04","2026-05-11",1,0,0,0,0],
+["CAMPANA MAYO WATTS","2026-05-04","2026-06-01",29,0,0,0,0],
+["CICLO MENSUAL ANDINA","2026-05-04","2026-06-30",6373,0,0,0,0],
+["CICLO MENSUAL SCORE","2026-05-04","2026-06-01",10,0,0,0,0],
+["COMBOS DIA DE LA MADRE TURBO","2026-05-04","2026-05-11",7,0,0,0,0],
+["DESAYUNO Y COLACIONES MAYO PURIPOP","2026-05-04","2026-05-09",270,0,0,0,0],
+["DESAYUNO Y COLACIONES SEGAFREDO","2026-05-04","2026-06-09",52,0,0,0,0],
+["DIA DE LA MADRE MAYO CAROZZI","2026-05-04","2026-05-11",24,0,0,0,0],
+["DIA DE LA MADRE MAYO ICB","2026-05-04","2026-06-11",3,0,0,0,0],
+["DIA DE LA MADRE MAYO ICB TURBO","2026-05-04","2026-05-11",2,0,0,0,0],
+["DIA DE LA MADRE MAYO ICB TURBO_1","2026-05-04","2026-05-11",4,0,0,0,0],
+["DIA DE LA MADRE MAYO ICB_TURBO","2026-05-04","2026-05-11",1,0,0,0,0],
+["DIA DE LA MADRE MAYO PRATER","2026-05-04","2026-05-10",7,0,0,0,0],
+["DIA DE LA MADRE MAYO PROMERCO","2026-05-04","2026-05-11",13,0,0,0,0],
+["DIA DE LA MADRE MAYO PROMERCO TURBO","2026-05-04","2026-05-11",14,0,0,0,0],
+["DIA DE LA MADRE MAYO SENOR K","2026-05-04","2026-05-11",8,0,0,0,0],
+["DIA DE LA MADRE VALDIVIESO","2026-05-04","2026-05-11",7,0,0,0,0],
+["DIA DE LA MADRE VDPT","2026-05-04","2026-05-11",8,0,0,0,0],
+["PRE CON TURBO EXTRALIFE","2026-05-04","2026-07-01",21,0,0,0,0],
+["PRE CON TURBO SCORE","2026-05-04","2026-06-01",31,0,0,0,0],
+["CAMPANA LE BANQUET DIA DE LA MADRE_1","2026-05-05","2026-05-11",7,0,0,0,0],
+["CICLO MENUAL AB INBEV ANDINA","2026-05-05","2026-05-31",24,0,0,0,0],
+["DIA DE LA MADRE BOGATI","2026-05-05","2026-05-11",210,0,0,0,0],
+["PROMO MAYO SC JOHNSON","2026-05-05","2026-05-31",270,0,0,0,0],
+["CAMPANA ICB 11 DE MAYO","2026-05-06","2026-05-11",8,0,0,0,0],
+["CAMPANA ICB 11 DE MAYO TURBO","2026-05-06","2026-05-11",11,0,0,0,0],
+["CAMPANA MAYO COLUN","2026-05-06","2026-05-31",130,0,0,0,0],
+["CAMPANA PIRULIN PROFUNDISACION","2026-05-06","2026-05-13",12,0,0,0,0],
+["COMPLEX PEPSICO","2026-05-06","2026-05-19",2370,0,0,0,0],
+["FRUVER MERCADO MAYO DOEAT","2026-05-06","2026-05-28",15,0,0,0,0],
+["FRUVER MERCADO MAYO DOET TURBO","2026-05-06","2026-05-14",87,0,0,0,0],
+["FRUVER MERCADO MAYO MANDALE","2026-05-06","2026-05-28",21,0,0,0,0],
+["FRUVER MERCADO MAYO MANDALE TURBO","2026-05-06","2026-05-14",118,0,0,0,0],
+["Ciclo Mensual AB InBev","2026-05-07","2026-05-31",200,0,0,0,0],
+["FDS MAYO PEPSICO","2026-05-07","2026-05-11",7,0,0,0,0],
+["FDS MAYO PEPSICO TURBO_1","2026-05-07","2026-05-11",3,0,0,0,0],
+["MENSUAL MAYO TMLUC","2026-05-07","2026-06-01",78,0,0,0,0],
+["PRE CON TURBO DESA","2026-05-07","2026-06-11",93,0,0,0,0],
+["PRE CON TURBO MAYO PRATER","2026-05-07","2026-06-10",29,0,0,0,0],
+["PRE CONTURBO MAYO CAROZZI","2026-05-07","2026-05-11",30,0,0,0,0],
+["CAMPANA MAYO LOS CRIADORES","2026-05-08","2026-05-31",24,0,0,0,0],
+["CAMPANA PF ALIMENTOS PIZZA SELL IN","2026-05-08","2026-05-31",48,0,0,0,0],
+["DIA DE LA MADRE JUGOS BLESS","2026-05-08","2026-05-11",4,0,0,0,0],
+["FDS MAYO PEPSICO TURBO","2026-05-08","2026-05-11",1,0,0,0,0],
+["FDS MAYO PEPSICO TURBO_2","2026-05-08","2026-05-11",4,0,0,0,0],
+["FDS MAYO PEPSICO_","2026-05-08","2026-05-11",4,0,0,0,0],
+["PRE CON TURBO MAYO BUKA","2026-05-08","2026-05-25",13,0,0,0,0],
+["DIA DE LA MADRE MAYO SUK","2026-05-09","2026-05-11",3,0,0,0,0],
+["Ciclo Mensual VSPT","2026-05-11","2026-06-01",22,0,0,0,0],
+["DESAYUNO MAYO SUK","2026-05-11","2026-05-30",14,0,0,0,0],
+["DESAYUNOS MAYO DE PURA MADRE","2026-05-11","2026-05-30",18,0,0,0,0],
+["PICOTEO MAYO SUK","2026-05-11","2026-05-30",14,0,0,0,0],
+["TURBO WEEK MIZOS","2026-05-11","2026-06-01",16,0,0,0,0],
+["TURBOWEEK MAYO TUCAPEL","2026-05-11","2026-05-18",16,0,0,0,0],
+["CAMPANA SELL IN QUILLAYES","2026-05-12","2026-05-31",140,0,0,0,0],
+["FRUVER MERCADO MAYO DOET","2026-05-13","2026-05-14",6,0,0,0,0],
+["FRUVER MERCADO MAYO DOET TURBO 1","2026-05-13","2026-05-21",109,0,0,0,0],
+["FRUVER MERCADO MAYO MANDALE TURBO 1","2026-05-13","2026-05-21",166,0,0,0,0],
+["ALWAYS ON MAYO IDEAL","2026-05-14","2026-06-01",28,0,0,0,0],
+["CHAMPIONS MAYO PURI","2026-05-14","2026-05-14",1,0,0,0,0],
+["ICB MAYO","2026-05-14","2026-06-01",23,0,0,0,0],
+["PGA CHAMPIONSHIP GOLF BUKA","2026-05-14","2026-05-18",5,0,0,0,0],
+["PRE CON TURBO MAYO IDEAL","2026-05-14","2026-05-31",12,0,0,0,0],
+["CAMPANA JO CHACUTERIE LOKAL","2026-05-15","2026-05-16",6,0,0,0,0],
+["CAMPANA SEMANA DEL COMPLETO PF","2026-05-15","2026-05-23",6,0,0,0,0],
+["CICLO MENSUAL ANDINA_1","2026-05-15","2026-05-31",18,0,0,0,0],
+["CICLO MENSUAL ANDINA_TURBO","2026-05-15","2026-05-31",34,0,0,0,0],
+["CAMPANA BITES MAYO AGROSUPER","2026-05-16","2026-05-18",3,0,0,0,0],
+["ESPECIAL CAC MAYO KINKI","2026-05-17","2026-05-18",2,0,0,0,0],
+["CAMPANA NESTLE CONGELADOS","2026-05-18","2026-05-31",2530,0,0,0,0],
+["CAMPANA SELL IN FREDDO MAYO-JUNIO","2026-05-18","2026-06-30",66,0,0,0,0],
+["DESAYUNO MAYO PANSION","2026-05-18","2026-05-30",14,0,0,0,0],
+["DESAYUNO MAYO PARRAU","2026-05-18","2026-05-25",8,0,0,0,0],
+["DESAYUNO Y COLACIONES MAYO PURI","2026-05-18","2026-05-19",60,0,0,0,0],
+["DESCUENTO DE COMBOS COMPLETOS WEEK","2026-05-18","2026-05-23",6,0,0,0,0],
+["MAYO NESTLE","2026-05-18","2026-05-31",15,0,0,0,0],
+["SEMANA COMPLETO MAYO IDEAL","2026-05-18","2026-05-25",8,0,0,0,0],
+["SEMANA HAMBURGESA MAYO IDEAL","2026-05-18","2026-05-31",14,0,0,0,0],
+["SEX SHOP WEEK JAPI JAINE","2026-05-18","2026-05-24",7,0,0,0,0],
+["SEX SHOP WEEK PRATER","2026-05-18","2026-05-24",7,0,0,0,0],
+["CAMPANA BITES FRUTOS DEL MAIPO","2026-05-19","2026-05-25",2,0,0,0,0],
+["CAMPANA BLUE OAK MAYO-JUNIO","2026-05-19","2026-06-30",29,0,0,0,0],
+["CAMPANA MAYO TRENDY","2026-05-20","2026-05-31",12,0,0,0,0],
+["CAMPANA STOCK CAC BITES AGROSUPER","2026-05-20","2026-05-28",7,0,0,0,0],
+["CICLO MENSUAL ANDINA _2","2026-05-20","2026-06-01",15,0,0,0,0],
+["DESAYUNO MAYO KINKI","2026-05-20","2026-05-30",10,0,0,0,0],
+["DESAYUNO Y COLACIONES MAYO PURIPOP_1","2026-05-20","2026-06-23",192,0,0,0,0],
+["MIZOS MAYO PORTAFOLIO","2026-05-20","2026-05-25",2,0,0,0,0],
+["ACEITE BANQUETE 250","2026-05-21","2026-05-31",11,0,0,0,0],
+["FIN_DE_SEMANA_PEPSICO","2026-05-21","2026-05-25",4,2.13,102,0,0.005],
+["FIN_DE_SEMANA_PEPSICO_TURBO","2026-05-21","2026-05-25",1,0,0,0,0],
+["CICLO MENSUAL_ANDINA_1","2026-05-25","2026-05-31",560,0,0,0,0],
+["DESAYUNO Y COLACIONES MIZOS","2026-05-25","2026-05-30",3,0,0,0,0],
+["DESAYUNO Y COLACIONES NUTRISCO MAYO","2026-05-25","2026-05-30",8,0,0,0,0],
+["DIA DE LA HAMBURGUESA BYMARIA","2026-05-25","2026-06-01",8,0,0,0,0],
+["MAYO NESTLE DESPENSA","2026-05-25","2026-06-01",36,0,0,0,0],
+["MAYO NESTLE HELADOS","2026-05-25","2026-06-01",2706,0,0,0,0],
+["FRUVER MERCADO MAYO DOET 3","2026-05-27","2026-05-28",57,0,0,0,0],
+["FRUVER MERCADO MAYO DOET 3 (2)","2026-05-27","2026-05-28",4,0,0,0,0],
+["FRUVER MERCADO MAYO MANDALE 3","2026-05-27","2026-05-28",79,0,0,0,0],
+["CAMPANA PF BURGEN WEEK","2026-05-28","2026-05-30",4,0,0,0,0],
+["CHAMPIONS LEAGUE ANDINA","2026-05-28","2026-05-31",6,0,0,0,0],
+["CLEAN AND CARE MAYO GRAYSON","2026-05-28","2026-06-01",5,0,0,0,0],
+["CLEAN AND CARE MAYO VIRUTEX","2026-05-28","2026-06-01",20,0,0,0,0],
+["CLEAN CARE MAYO SCJ","2026-05-28","2026-05-31",24,0,0,0,0],
+["PRE CON TURBO MAYO NUTRISCO","2026-05-28","2026-05-31",11,0,0,0,0],
+["PRE CON TURBO MAYO PURIPOP","2026-05-28","2026-05-31",4,0,0,0,0],
+["FINAL DE LA CHAMPIONS CCU","2026-05-30","2026-05-31",1,0,0,0,0],
+["CAFE WEEK NESTLE","2026-06-01","2026-06-23",39,0,0,0,0],
+["CAFE WEEK JUNIO SEGAFREDO","2026-06-01","2026-06-08",16,0,0,0,0],
+["CAMPANA CYBER WATTS","2026-06-01","2026-07-01",163,0,0,0,0],
+["CAMPANA JUNIO LOS CRIADORES","2026-06-01","2026-06-23",52,0,0,0,0],
+["CICLO MENSUAL AB INBEV ANDINA","2026-06-01","2026-06-30",184,0,0,0,0],
+["CICLO MENSUAL ANDINA COFINANCIADA","2026-06-01","2026-06-30",131,0,0,0,0],
+["COFFEE WEEK JUNIO DEUBEL","2026-06-01","2026-06-08",14,0,0,0,0],
+["COFFEE WEEK JUNIO IDEAL","2026-06-01","2026-06-08",8,0,0,0,0],
+["CYBER DESA","2026-06-01","2026-06-04",4,0,0,0,0],
+["CYBER JUNIO MILLANTU","2026-06-01","2026-06-04",4,0,0,0,0],
+["CYBER JUNIO NUTRISCO","2026-06-01","2026-06-03",6,0,0,0,0],
+["CYBER MIZOS JUNIO","2026-06-01","2026-06-04",4,0,0,0,0],
+["CYBER PEPSICO JUNIO","2026-06-01","2026-06-03",3,0,0,0,0],
+["CYBER PRATER","2026-06-01","2026-06-04",4,0,0,0,0],
+["CYBER PURI JUNIO","2026-06-01","2026-06-04",4,0,0,0,0],
+["CYBER RECKITT","2026-06-01","2026-06-04",4,0,0,0,0],
+["CYBER SCJ","2026-06-01","2026-06-05",40,0,0,0,0],
+["CYBER VSPT","2026-06-01","2026-06-04",8,0,0,0,0],
+["DESAYUNO JUNIO BARQUILLERIA","2026-06-01","2026-06-27",26,0,0,0,0],
+["DESAYUNO JUNIO DAILYFRESH","2026-06-01","2026-06-27",62,0,0,0,0],
+["DESAYUNO JUNIO IDEAL","2026-06-01","2026-06-27",20,0,0,0,0],
+["DESAYUNO JUNIO LA SELECTA","2026-06-01","2026-06-27",20,0,0,0,0],
+["DESAYUNO JUNIO PANSION","2026-06-01","2026-06-27",20,0,0,0,0],
+["DESAYUNO Y COLACIONES NESTLE JUNIO","2026-06-01","2026-07-01",1184,0,0,0,0],
+["DESAYUNO Y COLACIONES NUTRISCO JUNIO","2026-06-01","2026-06-27",20,0,0,0,0],
+["DESAYUNO Y COLACIONES TUCAPEL","2026-06-01","2026-06-27",20,0,0,0,0],
+["DIA DEL PADRE JUNIO NESTLE","2026-06-01","2026-07-01",1,0,0,0,0],
+["ECOVIDA JUNIO","2026-06-01","2026-07-01",23,0,0,0,0],
+["FIFA JUNIO PEPSICO","2026-06-01","2026-06-30",36,0,0,0,0],
+["JUNIO MENSUAL IANSA","2026-06-01","2026-07-01",69,0,0,0,0],
+["MENSUAL BUKA JUNIO","2026-06-01","2026-07-01",36,0,0,0,0],
+["MENSUAL GOURMET JUNIO","2026-06-01","2026-07-01",207,0,0,0,0],
+["MENSUAL JUNIO CAFE CARIBE","2026-06-01","2026-07-01",69,0,0,0,0],
+["MENSUAL JUNIO CAROZZI","2026-06-01","2026-06-30",249,0,0,0,0],
+["MENSUAL JUNIO ECKART","2026-06-01","2026-07-01",23,0,0,0,0],
+["MENSUAL JUNIO NESTLE","2026-06-01","2026-07-01",46,0,0,0,0],
+["MENSUAL JUNIO ONLINERESELLER","2026-06-01","2026-06-30",46,0,0,0,0],
+["MENSUAL JUNIO PROMERCO","2026-06-01","2026-06-30",69,0,0,0,0],
+["MENSUAL JUNIO TMLUC","2026-06-01","2026-06-30",138,0,0,0,0],
+["MENSUAL JUNIO TRAVERSO","2026-06-01","2026-06-30",69,0,0,0,0],
+["MENSUAL JUNIO TUCAPEL","2026-06-01","2026-07-01",92,0,0,0,0],
+["MENSUAL PURI JUNIO","2026-06-01","2026-06-30",23,0,0,0,0],
+["MENSUAL TIKA JUNIO","2026-06-01","2026-06-30",23,0,0,0,0],
+["PRE CON TURBO JUNIO NUTRISCO","2026-06-01","2026-06-27",47,0,0,0,0],
+["SEMANA DEL CAFE Y CYBER SENOR K","2026-06-01","2026-06-08",8,0,0,0,0],
+["CAMPANA JUNIO PF","2026-06-02","2026-06-30",176,0,0,0,0],
+["CAMPANA CYBER LE BANQUET","2026-06-03","2026-06-04",2,0,0,0,0],
+["CAMPANA JUNIO CIAL","2026-06-03","2026-06-30",63,0,0,0,0],
+["FRUVER MERCADO JUNIO DOEAT","2026-06-03","2026-06-18",36,0,0,0,0],
+["FRUVER MERCADO JUNIO MANDALE","2026-06-03","2026-06-18",36,0,0,0,0],
+["DIA DEL PADRE JUNIO CAROZZI","2026-06-04","2026-06-21",24,0,0,0,0],
+["MENSUAL JUNIO MILLANTU","2026-06-04","2026-06-30",20,0,0,0,0],
+["PRE CON TURBO JUNIO IDEAL","2026-06-04","2026-06-21",12,0,0,0,0],
+["PRE CON TURBO JUNIO PRATER","2026-06-04","2026-06-21",12,0,0,0,0],
+["LIQUIDACION JUNIO ICB","2026-06-05","2026-06-15",11,0,0,0,0],
+["PRE CON TURBO BUKA JUNIO","2026-06-05","2026-06-22",12,0,0,0,0],
+["Virutex Junio","2026-06-05","2026-06-30",169,0,0,0,0],
+["CAMPANA FREDDO JUNIO-AGOSTO","2026-06-08","2026-06-30",16,0,0,0,0],
+["CAMPANA JUNIO QUILLAYES","2026-06-08","2026-07-01",96,0,0,0,0],
+["DESAYUNO JUNIO BOGATI","2026-06-08","2026-06-27",8,0,0,0,0],
+["DESAYUNO JUNIO CINTA AZUL","2026-06-08","2026-07-01",16,0,0,0,0],
+["DESAYUNO JUNIO CUK","2026-06-08","2026-06-27",14,0,0,0,0],
+["DESAYUNO JUNIO DEUBEL","2026-06-08","2026-06-27",15,0,0,0,0],
+["DESAYUNO Y COLACIONES JUNIO SENOR K","2026-06-08","2026-06-27",16,0,0,0,0],
+["DESAYUNO Y COLACIONES PEPSICO JUNIO","2026-06-08","2026-06-24",8,0,0,0,0],
+["DESAYUNO Y COLACIONES PIBAMOUR","2026-06-08","2026-06-27",14,0,0,0,0],
+["FINI JUNIO","2026-06-08","2026-06-15",8,0,0,0,0],
+["JUNIO SOHO ACEITE","2026-06-08","2026-06-23",16,0,0,0,0],
+["MUNDIAL JUNIO PIBAMOUR","2026-06-08","2026-06-30",16,0,0,0,0],
+["TURBO WEEK TUCAPEL","2026-06-08","2026-06-15",8,0,0,0,0],
+["TURBOWEEK MIZOS JUNIO","2026-06-08","2026-06-15",8,0,0,0,0],
+["10 JUNIO PORTAFOLIO SEGAFREDO","2026-06-10","2026-06-11",2,0,0,0,0],
+["CAMPANA COLUN JUNIO","2026-06-10","2026-07-01",72,0,0,0,0],
+["FRUVER MERCADO JUNIO SOFRUCO","2026-06-10","2026-06-18",8,0,0,0,0],
+["FIN DE SEMANA PEPSICO JUNIO","2026-06-11","2026-06-14",8,0,0,0,0],
+["ALWAYS ON (5X4) NESTLE HELADOS","2026-06-12","2026-07-01",19,0,0,0,0],
+["ALWAYS ON NESTLE HELADOS","2026-06-12","2026-07-01",26,0,0,0,0],
+["CAMPANA MUNDIAL FRUTOS DEL MAIPO","2026-06-12","2026-07-21",48,0,0,0,0],
+["DESCUENTO MENSUAL PRATER JUNIO","2026-06-12","2026-07-01",1,0,0,0,0],
+["MENSUAL DEMARIA","2026-06-12","2026-07-01",26,0,0,0,0],
+["MUNDIAL HARIBO PIBAMOUR","2026-06-12","2026-06-20",9,0,0,0,0],
+["MUNDIAL JAPI JANE","2026-06-12","2026-06-30",12,0,0,0,0],
+["PRATER JUNIO","2026-06-12","2026-07-01",36,0,0,0,0],
+["PRE CON TURBO (13 DIAS) (5X4) NESTLE HELADOS","2026-06-12","2026-07-01",22,0,0,0,0],
+["PRE CON TURBO (13 DIAS) NESTLE HELADOS","2026-06-12","2026-06-21",8,0,0,0,0],
+["CAMPANA DDP LLANQUIHUE","2026-06-15","2026-06-22",8,0,0,0,0],
+["CAMPANA DIA DEL PADRE LA CABRESA","2026-06-15","2026-06-22",8,0,0,0,0],
+["CAMPANA DIA DEL PADRE STEFANO NARDINI","2026-06-15","2026-06-22",8,0,0,0,0],
+["DESAYUNO JUNIO BREDENMASTER","2026-06-15","2026-06-27",8,0,0,0,0],
+["DESAYUNO Y COLACIONES JUNIO SEGAFREDO","2026-06-15","2026-06-27",8,0,0,0,0],
+["DIA DEL PADRE COMBOS REGALOS TURBO","2026-06-15","2026-06-22",9,0,0,0,0],
+["DIA DEL PADRE DESA","2026-06-15","2026-06-22",8,0,0,0,0],
+["DIA DEL PADRE JUNIO AM DULCERIA","2026-06-15","2026-06-22",8,0,0,0,0],
+["DIA DEL PADRE JUNIO DEUBEL","2026-06-15","2026-06-29",17,0,0,0,0],
+["DIA DEL PADRE JUNIO PROMERCO","2026-06-15","2026-06-22",17,0,0,0,0],
+["DIA DEL PADRE JUNIO PROMERCO_TURBO","2026-06-15","2026-06-22",24,0,0,0,0],
+["DIA DEL PADRE MARLEY","2026-06-15","2026-06-30",25,0,0,0,0],
+["DIA DEL PADRE SENOR K","2026-06-15","2026-06-22",32,0,0,0,0],
+["DIA DEL PADRE SENOR K_TURBO","2026-06-15","2026-06-22",16,0,0,0,0],
+["DIA DEL PADRE JUNIO LA SELECTA","2026-06-15","2026-06-22",8,0,0,0,0],
+["DIA DEL PADRE VSPT","2026-06-15","2026-06-22",8,0,0,0,0],
+["DIA DEL PADRE JUNIO PROMERCO_1","2026-06-16","2026-06-22",14,0,0,0,0],
+["JUNIO ARCOR","2026-06-16","2026-07-01",24,0,0,0,0],
+["DIA DEL PADRE VALDIVIESO","2026-06-17","2026-07-01",6,0,0,0,0],
+["GRYLAN DIA DEL PADRE","2026-06-17","2026-06-22",6,0,0,0,0],
+["DIA DEL PADRE AUTOMOTRIZ","2026-06-18","2026-06-23",27,0,0,0,0],
+["ANDINA PROMO WHISKY DIA DEL PADRE COCA","2026-06-19","2026-06-21",3,0,0,0,0],
+["ANDINA PROMO WHISKY DIA DEL PADRE SCHWEPPERS","2026-06-19","2026-06-21",3,0,0,0,0],
+["ANDINA PROMO WHISKY DIA DEL PADRE SPRITE","2026-06-19","2026-06-21",3,0,0,0,0],
+["WHISKY HONEY DESA","2026-06-19","2026-06-21",4,0,0,0,0],
+["WHISKY N7 DESA","2026-06-19","2026-06-21",4,0,0,0,0],
+["CLEA Y CARE JUNIO VIRUTEX","2026-06-22","2026-06-28",10,0,0,0,0],
+["CLEAN AND CARE JUNIO GRAYSON","2026-06-22","2026-06-27",6,0,0,0,0],
+["CLEAN CARE JUNIO SCJ","2026-06-22","2026-06-28",8,0,0,0,0],
+["CLEAN&CARE JUNIO DEMARIA","2026-06-22","2026-06-28",2,0,0,0,0],
+["CLEAN&CARE JUNIO VIRUTEX","2026-06-22","2026-06-28",2,0,0,0,0],
+["DESAYUNO Y COLACIONES MIZOS JUNIO","2026-06-22","2026-06-27",2,0,0,0,0],
+["MASCOTAS JUNIO PROMERCO","2026-06-22","2026-06-29",4,0,0,0,0],
+["TACTICO JUNIO-JULIO CASTANO","2026-06-22","2026-07-20",4,0,0,0,0],
+["ALWAYS ON (4X3) NESTLE","2026-06-23","2026-07-01",1,0,0,0,0],
+["ALWAYS ON NESTLE","2026-06-23","2026-07-01",1,0,0,0,0],
+["IN AND OUT DIA DEL PADRE MARLEY","2026-06-23","2026-06-30",1,0,0,0,0]
+];
 
-const WEEKS = {"2026-06-15_2026-06-21": [{"period": "Q1-Q2 2026", "campaign": "DIA DEL PADRE JUNIO PROMERCO", "maker": "Promerco", "catalog": "445823", "ean": "7610400068529", "productId": "2121308940", "sync": "19044", "productName": "Lindt Chocolate Lindor Assorted", "startDate": "2026-06-15", "endDate": "2026-06-21", "discountPct": 50.0, "cargaMakerPct": 25.0, "cargaTurboPct": 25.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "DIA DEL PADRE JUNIO PROMERCO", "maker": "Promerco", "catalog": "429630", "ean": "7610400068505", "productId": "2092340728", "sync": "856", "productName": "Lindt Bombones de Chocolate con Leche", "startDate": "2026-06-15", "endDate": "2026-06-21", "discountPct": 50.0, "cargaMakerPct": 25.0, "cargaTurboPct": 25.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "DIA DEL PADRE SEÑOR K", "maker": "Señor K (C. Canas)", "catalog": "432182", "ean": "7804654890399", "productId": "2120013185", "sync": "3080", "productName": "Señor K Capsula De Cafe Manizales", "startDate": "2026-06-15", "endDate": "2026-06-21", "discountPct": 40.0, "cargaMakerPct": 25.0, "cargaTurboPct": 15.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "DIA DEL PADRE JUNIO PROMERCO", "maker": "Promerco", "catalog": "441733", "ean": "8003340807751", "productId": "2120646513", "sync": "12630", "productName": "Bombones Chocolate Leche Surtido Lindt", "startDate": "2026-06-15", "endDate": "2026-06-21", "discountPct": 40.0, "cargaMakerPct": 20.0, "cargaTurboPct": 20.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "DIA DEL PADRE JUNIO PROMERCO", "maker": "Promerco", "catalog": "441734", "ean": "8003340807775", "productId": "2120646495", "sync": "12631", "productName": "Bombones Chocolate Surtido Lindt", "startDate": "2026-06-15", "endDate": "2026-06-21", "discountPct": 40.0, "cargaMakerPct": 20.0, "cargaTurboPct": 20.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Red Bull Junio", "maker": "CCU", "catalog": "431811", "ean": "9002490100490", "productId": "2119443734", "sync": "1697", "productName": "Red Bull Bebida Energizante en Lata 4 x 250 cc", "startDate": "2026-06-18", "endDate": "2026-06-20", "discountPct": 40.0, "cargaMakerPct": 0.2, "cargaTurboPct": 0.0, "status": "ADS", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Red Bull Junio", "maker": "CCU", "catalog": "431812", "ean": "9002490200381", "productId": "2119443736", "sync": "1910", "productName": "Red Bull Bebida Energizante Sin Azúcar 4 x 250 cc", "startDate": "2026-06-18", "endDate": "2026-06-20", "discountPct": 40.0, "cargaMakerPct": 0.2, "cargaTurboPct": 0.0, "status": "ADS", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Red Bull Junio", "maker": "CCU", "catalog": "431813", "ean": "9002490232207", "productId": "2119443735", "sync": "1979", "productName": "Red Bull Bebida Energética Sabor Tropical 4 x 250 cc", "startDate": "2026-06-18", "endDate": "2026-06-20", "discountPct": 40.0, "cargaMakerPct": 0.2, "cargaTurboPct": 0.0, "status": "ADS", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433931", "ean": "7798070860817", "productId": "2120407207", "sync": "4731", "productName": "Freddo Helado Sabor a Dulce Leche Clásico", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433932", "ean": "7798070860718", "productId": "2120407250", "sync": "4732", "productName": "Freddo Helado Sabor Chocolate Doble Tentación", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "442608", "ean": "7798070861043", "productId": "2120746347", "sync": "15084", "productName": "Freddo Helado Due Nocciola", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "441965", "ean": "7798070861166", "productId": "2120389359", "sync": "12976", "productName": "Freddo Helado de Dulce de Leche Granizado y Chocolate", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433944", "ean": "7798070860916", "productId": "2120407770", "sync": "4744", "productName": "Freddo Helado Tableta Chocolate Tentación", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "PRATER JUNIO", "maker": "Prater", "catalog": "430805", "ean": "7804918450031", "productId": "2092425865", "sync": "489", "productName": "Lifestyles Preservativo Lubricado Rough Rider", "startDate": "2026-06-12", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": null, "cargaTurboPct": 20.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "DESAYUNO Y COLACIONES TUCAPEL", "maker": "Tucapel", "catalog": "431609", "ean": "7801420001904", "productId": "2119399168", "sync": "1960", "productName": "Tucapel Galletas de Arroz Dulce", "startDate": "2026-06-15", "endDate": "2026-06-19", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "442192", "ean": "7802820500035", "productId": "2120006416", "sync": "13582", "productName": "Nectar Del Valle Durazno 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "442194", "ean": "7802820700435", "productId": "2119834933", "sync": "13584", "productName": "Nectar Del Valle Manzana 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "430045", "ean": "7802820700633", "productId": "2092340920", "sync": "1509", "productName": "Nectar Del Valle Naranja Sin Azúcar 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "442190", "ean": "7802820645859", "productId": "2119924682", "sync": "13580", "productName": "Nectar Del Valle Piña Sin Azúcar Añadida 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "431846", "ean": "7802820048322", "productId": "2119454797", "sync": "2174", "productName": "Nectar Dell Valle Durazno Sin Azúcar Añadida 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432229", "ean": "7802820678048", "productId": "2119634621", "sync": "595", "productName": "Powerade Frozen Blast Bebida Isotónica 1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432231", "ean": "7802820678062", "productId": "2119634622", "sync": "605", "productName": "Powerade Bebida Isotónica Naranja 1.1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432230", "ean": "7802820678055", "productId": "2119634620", "sync": "600", "productName": "Powerade Bebida Isotónica Rojo 1.1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432226", "ean": "7802820678017", "productId": "2119634626", "sync": "583", "productName": "Powerade Bebida Isotónica Zero 1.1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "442192", "ean": "7802820500035", "productId": "2120006416", "sync": "13582", "productName": "Del Valle Nectar Durazno 1,5 Lt", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "442194", "ean": "7802820700435", "productId": "2119834933", "sync": "13584", "productName": "Del Valle Nectar Manzana 1,5 Lt", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "430045", "ean": "7802820700633", "productId": "2092340920", "sync": "1509", "productName": "Andina Del Valle Néctar de Naranja Sin Azúcar 1.5 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "442190", "ean": "7802820645859", "productId": "2119924682", "sync": "13580", "productName": "Del Valle Sin Azúcar Añadida Piña 1,5 Lt", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "431846", "ean": "7802820048322", "productId": "2119454797", "sync": "2174", "productName": "Del Valle Sin Azúcar Durazno Añadida 1,5 Lt", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432231", "ean": "7802820678062", "productId": "2119634622", "sync": "605", "productName": "Powerade Bebida Isotónica Naranja 1.1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}], "2026-06-22_2026-06-28": [{"period": "Q1-Q2 2026", "campaign": "Campaña Red Bull Junio", "maker": "CCU", "catalog": "431811", "ean": "9002490100490", "productId": "2119443734", "sync": "1697", "productName": "Red Bull Bebida Energizante en Lata 4 x 250 cc", "startDate": "2026-06-25", "endDate": "2026-06-27", "discountPct": 40.0, "cargaMakerPct": 0.2, "cargaTurboPct": 0.0, "status": "ADS", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Red Bull Junio", "maker": "CCU", "catalog": "431812", "ean": "9002490200381", "productId": "2119443736", "sync": "1910", "productName": "Red Bull Bebida Energizante Sin Azúcar 4 x 250 cc", "startDate": "2026-06-25", "endDate": "2026-06-27", "discountPct": 40.0, "cargaMakerPct": 0.2, "cargaTurboPct": 0.0, "status": "ADS", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Red Bull Junio", "maker": "CCU", "catalog": "431813", "ean": "9002490232207", "productId": "2119443735", "sync": "1979", "productName": "Red Bull Bebida Energética Sabor Tropical 4 x 250 cc", "startDate": "2026-06-25", "endDate": "2026-06-27", "discountPct": 40.0, "cargaMakerPct": 0.2, "cargaTurboPct": 0.0, "status": "ADS", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Clean& Care Junio scj", "maker": "Sc Johnson", "catalog": "440751", "ean": "7790520014177", "productId": "2120579909", "sync": "11638", "productName": "Desinfectante Ambientes y Superficies  Lysoform Original 360 cc", "startDate": "2026-06-22", "endDate": "2026-06-27", "discountPct": 39.1, "cargaMakerPct": 39.1, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433931", "ean": "7798070860817", "productId": "2120407207", "sync": "4731", "productName": "Freddo Helado Sabor a Dulce Leche Clásico", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433932", "ean": "7798070860718", "productId": "2120407250", "sync": "4732", "productName": "Freddo Helado Sabor Chocolate Doble Tentación", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "442608", "ean": "7798070861043", "productId": "2120746347", "sync": "15084", "productName": "Freddo Helado Due Nocciola", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "441965", "ean": "7798070861166", "productId": "2120389359", "sync": "12976", "productName": "Freddo Helado de Dulce de Leche Granizado y Chocolate", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433944", "ean": "7798070860916", "productId": "2120407770", "sync": "4744", "productName": "Freddo Helado Tableta Chocolate Tentación", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "PRATER JUNIO", "maker": "Prater", "catalog": "430805", "ean": "7804918450031", "productId": "2092425865", "sync": "489", "productName": "Lifestyles Preservativo Lubricado Rough Rider", "startDate": "2026-06-12", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": null, "cargaTurboPct": 20.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "DESAYUNO Y COLACIONES TUCAPEL", "maker": "Tucapel", "catalog": "431609", "ean": "7801420001904", "productId": "2119399168", "sync": "1960", "productName": "Tucapel Galletas de Arroz Dulce", "startDate": "2026-06-22", "endDate": "2026-06-26", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "442192", "ean": "7802820500035", "productId": "2120006416", "sync": "13582", "productName": "Nectar Del Valle Durazno 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "442194", "ean": "7802820700435", "productId": "2119834933", "sync": "13584", "productName": "Nectar Del Valle Manzana 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "430045", "ean": "7802820700633", "productId": "2092340920", "sync": "1509", "productName": "Nectar Del Valle Naranja Sin Azúcar 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "442190", "ean": "7802820645859", "productId": "2119924682", "sync": "13580", "productName": "Nectar Del Valle Piña Sin Azúcar Añadida 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "431846", "ean": "7802820048322", "productId": "2119454797", "sync": "2174", "productName": "Nectar Dell Valle Durazno Sin Azúcar Añadida 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432229", "ean": "7802820678048", "productId": "2119634621", "sync": "595", "productName": "Powerade Frozen Blast Bebida Isotónica 1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432231", "ean": "7802820678062", "productId": "2119634622", "sync": "605", "productName": "Powerade Bebida Isotónica Naranja 1.1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432230", "ean": "7802820678055", "productId": "2119634620", "sync": "600", "productName": "Powerade Bebida Isotónica Rojo 1.1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432226", "ean": "7802820678017", "productId": "2119634626", "sync": "583", "productName": "Powerade Bebida Isotónica Zero 1.1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "442192", "ean": "7802820500035", "productId": "2120006416", "sync": "13582", "productName": "Del Valle Nectar Durazno 1,5 Lt", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "442194", "ean": "7802820700435", "productId": "2119834933", "sync": "13584", "productName": "Del Valle Nectar Manzana 1,5 Lt", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "430045", "ean": "7802820700633", "productId": "2092340920", "sync": "1509", "productName": "Andina Del Valle Néctar de Naranja Sin Azúcar 1.5 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "442190", "ean": "7802820645859", "productId": "2119924682", "sync": "13580", "productName": "Del Valle Sin Azúcar Añadida Piña 1,5 Lt", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "431846", "ean": "7802820048322", "productId": "2119454797", "sync": "2174", "productName": "Del Valle Sin Azúcar Durazno Añadida 1,5 Lt", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432231", "ean": "7802820678062", "productId": "2119634622", "sync": "605", "productName": "Powerade Bebida Isotónica Naranja 1.1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432228", "ean": "7802820678024", "productId": "2119634623", "sync": "590", "productName": "Powerade Bebida Isotónica Zero Lima Limón 1.1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432227", "ean": "7802820678031", "productId": "2119634624", "sync": "587", "productName": "Powerade Bebida Isotónica Zero Sabor a Uva 1.1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "442199", "ean": "7802820452129", "productId": "2120412411", "sync": "13589", "productName": "Benedictino Manzana 1,5 Lt", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Clean&Care Junio Virutex", "maker": "Virutex", "catalog": "444945", "ean": "7806810024464", "productId": "2121238678", "sync": "18260", "productName": "Virutex Bolsa de Basura Vainilla 70 cm", "startDate": "2026-06-22", "endDate": "2026-06-27", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}], "2026-06-29_2026-07-05": [{"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433931", "ean": "7798070860817", "productId": "2120407207", "sync": "4731", "productName": "Freddo Helado Sabor a Dulce Leche Clásico", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433932", "ean": "7798070860718", "productId": "2120407250", "sync": "4732", "productName": "Freddo Helado Sabor Chocolate Doble Tentación", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "442608", "ean": "7798070861043", "productId": "2120746347", "sync": "15084", "productName": "Freddo Helado Due Nocciola", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "441965", "ean": "7798070861166", "productId": "2120389359", "sync": "12976", "productName": "Freddo Helado de Dulce de Leche Granizado y Chocolate", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433944", "ean": "7798070860916", "productId": "2120407770", "sync": "4744", "productName": "Freddo Helado Tableta Chocolate Tentación", "startDate": "2026-06-08", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "PRATER JUNIO", "maker": "Prater", "catalog": "430805", "ean": "7804918450031", "productId": "2092425865", "sync": "489", "productName": "Lifestyles Preservativo Lubricado Rough Rider", "startDate": "2026-06-12", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": null, "cargaTurboPct": 20.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "DESAYUNO Y COLACIONES TUCAPEL", "maker": "Tucapel", "catalog": "431609", "ean": "7801420001904", "productId": "2119399168", "sync": "1960", "productName": "Tucapel Galletas de Arroz Dulce", "startDate": "2026-06-29", "endDate": "2026-06-30", "discountPct": 35.0, "cargaMakerPct": 35.0, "cargaTurboPct": 0.0, "status": "CARGADO", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433931", "ean": "7798070860817", "productId": "2120407207", "sync": "4731", "productName": "Freddo Helado Sabor a Dulce Leche Clásico", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 3500.0, "cargaTurboPct": 0.0, "status": "ESPERANDO OC", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433932", "ean": "7798070860718", "productId": "2120407250", "sync": "4732", "productName": "Freddo Helado Sabor Chocolate Doble Tentación", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 3500.0, "cargaTurboPct": 0.0, "status": "ESPERANDO OC", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "442608", "ean": "7798070861043", "productId": "2120746347", "sync": "15084", "productName": "Freddo Helado Due Nocciola", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 3500.0, "cargaTurboPct": 0.0, "status": "ESPERANDO OC", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "441965", "ean": "7798070861166", "productId": "2120389359", "sync": "12976", "productName": "Freddo Helado de Dulce de Leche Granizado y Chocolate", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 3500.0, "cargaTurboPct": 0.0, "status": "ESPERANDO OC", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433944", "ean": "7798070860916", "productId": "2120407770", "sync": "4744", "productName": "Freddo Helado Tableta Chocolate Tentación", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 3500.0, "cargaTurboPct": 0.0, "status": "ESPERANDO OC", "wmsStatus": "cargado"}, {"period": "Q3-Q4 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433931", "ean": "7798070860817", "productId": "2120407207", "sync": "4731", "productName": "Freddo Helado Sabor a Dulce Leche Clásico", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "ESPERANDO OC", "wmsStatus": "cargado"}, {"period": "Q3-Q4 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433932", "ean": "7798070860718", "productId": "2120407250", "sync": "4732", "productName": "Freddo Helado Sabor Chocolate Doble Tentación", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "ESPERANDO OC", "wmsStatus": "cargado"}, {"period": "Q3-Q4 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "442608", "ean": "7798070861043", "productId": "2120746347", "sync": "15084", "productName": "Freddo Helado Due Nocciola", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "ESPERANDO OC", "wmsStatus": "cargado"}, {"period": "Q3-Q4 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "441965", "ean": "7798070861166", "productId": "2120389359", "sync": "12976", "productName": "Freddo Helado de Dulce de Leche Granizado y Chocolate", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "ESPERANDO OC", "wmsStatus": "cargado"}, {"period": "Q3-Q4 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433944", "ean": "7798070860916", "productId": "2120407770", "sync": "4744", "productName": "Freddo Helado Tableta Chocolate Tentación", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "ESPERANDO OC", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Julio Virutex", "maker": "Virutex", "catalog": "430285", "ean": "7806810007443", "productId": "2092341117", "sync": "2088", "productName": "Virutex Trapero Húmedo Desinfectante con Ojal Multiuso Limón", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 33.3, "cargaMakerPct": null, "cargaTurboPct": 0.0, "status": "EN PROCESO", "wmsStatus": "cargado"}, {"period": "Q3-Q4 2026", "campaign": "Julio Virutex", "maker": "Virutex", "catalog": "430285", "ean": "7806810007443", "productId": "2092341117", "sync": "2088", "productName": "Virutex Trapero Húmedo Desinfectante con Ojal Multiuso Limón", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 33.3, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "EN PROCESO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "442192", "ean": "7802820500035", "productId": "2120006416", "sync": "13582", "productName": "Nectar Del Valle Durazno 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "442194", "ean": "7802820700435", "productId": "2119834933", "sync": "13584", "productName": "Nectar Del Valle Manzana 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "430045", "ean": "7802820700633", "productId": "2092340920", "sync": "1509", "productName": "Nectar Del Valle Naranja Sin Azúcar 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "442190", "ean": "7802820645859", "productId": "2119924682", "sync": "13580", "productName": "Nectar Del Valle Piña Sin Azúcar Añadida 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "431846", "ean": "7802820048322", "productId": "2119454797", "sync": "2174", "productName": "Nectar Dell Valle Durazno Sin Azúcar Añadida 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432229", "ean": "7802820678048", "productId": "2119634621", "sync": "595", "productName": "Powerade Frozen Blast Bebida Isotónica 1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432231", "ean": "7802820678062", "productId": "2119634622", "sync": "605", "productName": "Powerade Bebida Isotónica Naranja 1.1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432230", "ean": "7802820678055", "productId": "2119634620", "sync": "600", "productName": "Powerade Bebida Isotónica Rojo 1.1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "432226", "ean": "7802820678017", "productId": "2119634626", "sync": "583", "productName": "Powerade Bebida Isotónica Zero 1.1 L", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "442192", "ean": "7802820500035", "productId": "2120006416", "sync": "13582", "productName": "Del Valle Nectar Durazno 1,5 Lt", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}, {"period": "Q1-Q2 2026", "campaign": "Ciclo mensual Andina", "maker": "Andina", "catalog": "442194", "ean": "7802820700435", "productId": "2119834933", "sync": "13584", "productName": "Del Valle Nectar Manzana 1,5 Lt", "startDate": "2026-06-01", "endDate": "2026-06-30", "discountPct": 33.0, "cargaMakerPct": 0.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "cargado"}], "2026-07-06_2026-07-12": [{"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433931", "ean": "7798070860817", "productId": "2120407207", "sync": "4731", "productName": "Freddo Helado Sabor a Dulce Leche Clásico", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 3500.0, "cargaTurboPct": 0.0, "status": "ESPERANDO OC", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433932", "ean": "7798070860718", "productId": "2120407250", "sync": "4732", "productName": "Freddo Helado Sabor Chocolate Doble Tentación", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 3500.0, "cargaTurboPct": 0.0, "status": "ESPERANDO OC", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "442608", "ean": "7798070861043", "productId": "2120746347", "sync": "15084", "productName": "Freddo Helado Due Nocciola", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 3500.0, "cargaTurboPct": 0.0, "status": "ESPERANDO OC", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "441965", "ean": "7798070861166", "productId": "2120389359", "sync": "12976", "productName": "Freddo Helado de Dulce de Leche Granizado y Chocolate", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 3500.0, "cargaTurboPct": 0.0, "status": "ESPERANDO OC", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433944", "ean": "7798070860916", "productId": "2120407770", "sync": "4744", "productName": "Freddo Helado Tableta Chocolate Tentación", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 3500.0, "cargaTurboPct": 0.0, "status": "ESPERANDO OC", "wmsStatus": "no_encontrado"}, {"period": "Q3-Q4 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433931", "ean": "7798070860817", "productId": "2120407207", "sync": "4731", "productName": "Freddo Helado Sabor a Dulce Leche Clásico", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "ESPERANDO OC", "wmsStatus": "no_encontrado"}, {"period": "Q3-Q4 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433932", "ean": "7798070860718", "productId": "2120407250", "sync": "4732", "productName": "Freddo Helado Sabor Chocolate Doble Tentación", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "ESPERANDO OC", "wmsStatus": "no_encontrado"}, {"period": "Q3-Q4 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "442608", "ean": "7798070861043", "productId": "2120746347", "sync": "15084", "productName": "Freddo Helado Due Nocciola", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "ESPERANDO OC", "wmsStatus": "no_encontrado"}, {"period": "Q3-Q4 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "441965", "ean": "7798070861166", "productId": "2120389359", "sync": "12976", "productName": "Freddo Helado de Dulce de Leche Granizado y Chocolate", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "ESPERANDO OC", "wmsStatus": "no_encontrado"}, {"period": "Q3-Q4 2026", "campaign": "Campaña Freddo Junio-Agosto", "maker": "Freddo", "catalog": "433944", "ean": "7798070860916", "productId": "2120407770", "sync": "4744", "productName": "Freddo Helado Tableta Chocolate Tentación", "startDate": "2026-07-01", "endDate": "2026-08-31", "discountPct": 35.0, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "ESPERANDO OC", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "Julio Virutex", "maker": "Virutex", "catalog": "430285", "ean": "7806810007443", "productId": "2092341117", "sync": "2088", "productName": "Virutex Trapero Húmedo Desinfectante con Ojal Multiuso Limón", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 33.3, "cargaMakerPct": null, "cargaTurboPct": 0.0, "status": "EN PROCESO", "wmsStatus": "no_encontrado"}, {"period": "Q3-Q4 2026", "campaign": "Julio Virutex", "maker": "Virutex", "catalog": "430285", "ean": "7806810007443", "productId": "2092341117", "sync": "2088", "productName": "Virutex Trapero Húmedo Desinfectante con Ojal Multiuso Limón", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 33.3, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "EN PROCESO", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "442192", "ean": "7802820500035", "productId": "2120006416", "sync": "13582", "productName": "Nectar Del Valle Durazno 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "442194", "ean": "7802820700435", "productId": "2119834933", "sync": "13584", "productName": "Nectar Del Valle Manzana 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "430045", "ean": "7802820700633", "productId": "2092340920", "sync": "1509", "productName": "Nectar Del Valle Naranja Sin Azúcar 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "442190", "ean": "7802820645859", "productId": "2119924682", "sync": "13580", "productName": "Nectar Del Valle Piña Sin Azúcar Añadida 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "CICLO MENSUAL_ANDINA_1", "maker": "Andina", "catalog": "431846", "ean": "7802820048322", "productId": "2119454797", "sync": "2174", "productName": "Nectar Dell Valle Durazno Sin Azúcar Añadida 1.5 L", "startDate": "2026-05-01", "endDate": "2026-07-31", "discountPct": 33.0, "cargaMakerPct": 33.0, "cargaTurboPct": 33.0, "status": "CARGADO", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "Julio Virutex", "maker": "Virutex", "catalog": "435253", "ean": "7806810017442", "productId": "2120467587", "sync": "6156", "productName": "Trapero Húmedo Virtuex Desinfectante Lavanda 10un", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 32.8, "cargaMakerPct": null, "cargaTurboPct": 0.0, "status": "EN PROCESO", "wmsStatus": "no_encontrado"}, {"period": "Q3-Q4 2026", "campaign": "Julio Virutex", "maker": "Virutex", "catalog": "435253", "ean": "7806810017442", "productId": "2120467587", "sync": "6156", "productName": "Trapero Húmedo Virtuex Desinfectante Lavanda 10un", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 32.8, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "EN PROCESO", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "Julio Virutex", "maker": "Virutex", "catalog": "430279", "ean": "7806810004145", "productId": "2092340945", "sync": "2050", "productName": "Virutex Esponjas Multiusos Anatómicas", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 31.5, "cargaMakerPct": null, "cargaTurboPct": 0.0, "status": "EN PROCESO", "wmsStatus": "no_encontrado"}, {"period": "Q3-Q4 2026", "campaign": "Julio Virutex", "maker": "Virutex", "catalog": "430279", "ean": "7806810004145", "productId": "2092340945", "sync": "2050", "productName": "Virutex Esponjas Multiusos Anatómicas", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 31.5, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "EN PROCESO", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "MARZO A JULIO LIQUIDACIÓN", "maker": "Virutex", "catalog": "444912", "ean": "7806810800877", "productId": "2121238716", "sync": "18228", "productName": "Virutex Bolsa para Basura Mediana", "startDate": "2026-03-01", "endDate": "2026-07-31", "discountPct": 30.0, "cargaMakerPct": 30.0, "cargaTurboPct": 0.0, "status": "", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "MARZO A JULIO LIQUIDACIÓN", "maker": "Virutex", "catalog": "444942", "ean": "7806810800860", "productId": "2121238720", "sync": "18257", "productName": "Virutex Bolsa de Basura Pequeña", "startDate": "2026-03-01", "endDate": "2026-07-31", "discountPct": 30.0, "cargaMakerPct": 30.0, "cargaTurboPct": 0.0, "status": "", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "MENSUAL JULIO TRAVERSO", "maker": "Traverso", "catalog": "442796", "ean": "7802337910235", "productId": "2120824375", "sync": "15587", "productName": "PICKLES TRAVERSO 200 gr - Traverso - 200 g", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 30.0, "cargaMakerPct": null, "cargaTurboPct": 0.0, "status": "EN PROCESO", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "Julio Virutex", "maker": "Virutex", "catalog": "435241", "ean": "7806810005050", "productId": "2120455738", "sync": "6102", "productName": "Virutex Paño Esponja Natural", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 30.0, "cargaMakerPct": null, "cargaTurboPct": 0.0, "status": "EN PROCESO", "wmsStatus": "no_encontrado"}, {"period": "Q3-Q4 2026", "campaign": "Julio Virutex", "maker": "Virutex", "catalog": "435241", "ean": "7806810005050", "productId": "2120455738", "sync": "6102", "productName": "Virutex Paño Esponja Natural", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 30.0, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "EN PROCESO", "wmsStatus": "no_encontrado"}, {"period": "Q3-Q4 2026", "campaign": "MENSUAL JULIO TRAVERSO", "maker": "Traverso", "catalog": "442796", "ean": "7802337910235", "productId": "2120824375", "sync": "15587", "productName": "PICKLES TRAVERSO 200 gr - Traverso - 200 g", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 30.0, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "EN PROCESO", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "Julio Virutex", "maker": "Virutex", "catalog": "431895", "ean": "7806810003612", "productId": "2119467627", "sync": "2900", "productName": "Virutex Esponja Spunita Clásica", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 29.4, "cargaMakerPct": null, "cargaTurboPct": 0.0, "status": "EN PROCESO", "wmsStatus": "no_encontrado"}, {"period": "Q3-Q4 2026", "campaign": "Julio Virutex", "maker": "Virutex", "catalog": "431895", "ean": "7806810003612", "productId": "2119467627", "sync": "2900", "productName": "Virutex Esponja Spunita Clásica", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 29.4, "cargaMakerPct": 0.0, "cargaTurboPct": 100.0, "status": "EN PROCESO", "wmsStatus": "no_encontrado"}, {"period": "Q1-Q2 2026", "campaign": "Julio Virutex", "maker": "Virutex", "catalog": "435240", "ean": "7806810007184", "productId": "2120455730", "sync": "6101", "productName": "Virutex Paño Multiuso Ultra Absorbente y Durable", "startDate": "2026-07-01", "endDate": "2026-07-31", "discountPct": 29.2, "cargaMakerPct": null, "cargaTurboPct": 0.0, "status": "EN PROCESO", "wmsStatus": "no_encontrado"}]};
-const GENERATED_AT = '21 jun 2026, 03:15 hrs';
+const MONTH_NAMES={'02':'Feb','03':'Mar','04':'Abr','05':'May','06':'Jun','07':'Jul'};
 
-const WEEK_LABELS = {
-  '2026-06-15_2026-06-21': '15 — 21 junio 2026',
-  '2026-06-22_2026-06-28': '22 — 28 junio 2026',
-  '2026-06-29_2026-07-05': '29 jun — 5 julio 2026',
-  '2026-07-06_2026-07-12': '6 — 12 julio 2026',
-};
-
-const WMS_LABELS = {
-  cargado: '✓ Cargado en WMS',
-  smart_only: '⏳ Solo SMART (vencimiento)',
-  no_encontrado: '✕ No encontrado en WMS',
-};
-
-function escapeHtml(s){
-  if(s == null) return '';
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-function fmtDate(d){
-  if(!d) return '—';
-  const [y,m,day] = d.split('-');
-  const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-  return `${day} ${months[parseInt(m,10)-1]} ${y}`;
-}
-
-function cargaBreakdown(d){
-  const parts = [];
-  if(d.cargaMakerPct != null && d.cargaMakerPct !== 0) parts.push(`${d.cargaMakerPct.toFixed(0)}% maker`);
-  if(d.cargaTurboPct != null && d.cargaTurboPct !== 0) parts.push(`${d.cargaTurboPct.toFixed(0)}% turbo`);
-  return parts.length ? parts.join(' + ') : '—';
-}
-
-function statusLabel(s){
-  if(!s) return 'Sin estado';
-  return s.charAt(0) + s.slice(1).toLowerCase();
-}
-
-const container = document.getElementById('w-dealsContainer');
-let currentDeals = [];
-
-function renderWeek(weekKey){
-  currentDeals = WEEKS[weekKey] || [];
-
-  container.innerHTML = currentDeals.map((d, i) => `
-    <div class="deal-card" data-deal-idx="${i}" tabindex="0" role="button" aria-label="Ver detalle de ${escapeHtml(d.productName)}">
-      <div>
-        <div class="deal-rank">#${i+1}</div>
-        <div class="deal-disc">${d.discountPct.toFixed(0)}%</div>
-      </div>
-      <div class="deal-info">
-        <div class="deal-name">${escapeHtml(d.productName)}</div>
-        <div class="deal-meta">${escapeHtml(d.maker || 'Maker no especificado')} · ${escapeHtml(d.campaign)}</div>
-        <div class="deal-codes">Content Portal: ${escapeHtml(d.productId)} · EAN: ${escapeHtml(d.ean)}</div>
-      </div>
-      <span class="wms-status ${d.wmsStatus}">${WMS_LABELS[d.wmsStatus]}</span>
-    </div>
-  `).join('');
-
-  container.querySelectorAll('.deal-card').forEach(card => {
-    const idx = parseInt(card.dataset.dealIdx, 10);
-    const trigger = () => openDealDetail(currentDeals[idx], idx + 1);
-    card.addEventListener('click', trigger);
-    card.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); trigger(); } });
+function ttl(s){
+  const low=new Set(['de','del','la','el','los','las','en','con','para','a','al','o','y','e','ni','sin','por']);
+  return s.replace(/\S+/g,(w,i)=>{
+    if(i>0&&low.has(w.toLowerCase()))return w.toLowerCase();
+    return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase();
   });
-
-  // Coverage warning: flag weeks where most/all deals show no_encontrado, since this commonly
-  // means WMS just hasn't been loaded that far ahead yet — not necessarily a real gap.
-  const noMatchCount = currentDeals.filter(d => d.wmsStatus === 'no_encontrado').length;
-  const noteEl = document.getElementById('w-snapshotNote');
-  if(currentDeals.length > 0 && noMatchCount / currentDeals.length >= 0.5){
-    noteEl.innerHTML = `⚠ Esta vista es una FOTO al momento de generarla — no se actualiza sola. Además, esta semana está lejos en el calendario: muchos "no encontrado" probablemente significan que WMS aún no ha cargado tan a futuro, no que la campaña esté fallando.`;
-  } else {
-    noteEl.textContent = '⚠ Esta vista es una FOTO al momento de generarla — no se actualiza sola.';
-  }
 }
 
-document.getElementById('w-weekSelect').addEventListener('change', e => {
-  renderWeek(e.target.value);
-});
+function fmtDate(s){const p=s.slice(5).split('-');return p[1]+'/'+p[0];}
 
-renderWeek(document.getElementById('w-weekSelect').value);
+let state={month:'all',q:''};
 
-function openDealDetail(d, rank){
-  document.getElementById('w-detailModalBody').innerHTML = `
-    <div class="detail-header">
-      <div class="detail-rank-disc">
-        <div class="detail-disc">${d.discountPct.toFixed(0)}%</div>
-        <div class="detail-rank-tag">#${rank} de la semana</div>
-      </div>
-      <div class="detail-product" id="w-detailModalTitle">${escapeHtml(d.productName)}</div>
-      <div class="detail-maker-campaign">${escapeHtml(d.maker || 'Maker no especificado')} · ${escapeHtml(d.campaign)}</div>
-    </div>
-    <div class="detail-body">
-      <div class="detail-grid">
-        <div class="detail-field">
-          <div class="detail-field-label">Fecha inicio</div>
-          <div class="detail-field-val mono">${fmtDate(d.startDate)}</div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Fecha fin</div>
-          <div class="detail-field-val mono">${fmtDate(d.endDate)}</div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Descuento maker + turbo</div>
-          <div class="detail-field-val mono">${cargaBreakdown(d)}</div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Estado en calendario</div>
-          <div class="detail-field-val">${escapeHtml(statusLabel(d.status))}</div>
-        </div>
-      </div>
+function uniqueMonths(){const seen=new Set();CAMPS.forEach(c=>seen.add(c[1].slice(0,7)));return [...seen].sort();}
 
-      <div class="detail-section-title">Códigos de identificación</div>
-      <div class="detail-codes">
-        <div class="detail-code-box">
-          <div class="detail-code-label">EAN</div>
-          <div class="detail-code-val">${escapeHtml(d.ean || '—')}</div>
-        </div>
-        <div class="detail-code-box">
-          <div class="detail-code-label">Sync</div>
-          <div class="detail-code-val">${escapeHtml(d.sync || '—')}</div>
-        </div>
-        <div class="detail-code-box">
-          <div class="detail-code-label">Content Portal ID</div>
-          <div class="detail-code-val">${escapeHtml(d.productId || '—')}</div>
-        </div>
-      </div>
-
-      <div class="detail-wms-status">
-        <span class="wms-status ${d.wmsStatus}">${WMS_LABELS[d.wmsStatus]}</span>
-      </div>
-    </div>
-  `;
-
-  const overlay = document.getElementById('w-detailOverlay');
-  overlay.classList.add('open');
-  overlay.setAttribute('aria-hidden', 'false');
-  document.getElementById('w-detailCloseBtn').focus();
+function filtered(){
+  const q=state.q.toLowerCase().trim();
+  return CAMPS.filter(c=>{
+    let mok=true;
+    if(state.month!=='all'){mok=c[1]<=state.month+'-31'&&c[2]>=state.month+'-01';}
+    return mok&&(!q||c[0].toLowerCase().includes(q));
+  });
 }
 
-function closeDealDetail(){
-  const overlay = document.getElementById('w-detailOverlay');
-  overlay.classList.remove('open');
-  overlay.setAttribute('aria-hidden', 'true');
+function renderPills(){
+  const ms=uniqueMonths();
+  const el=document.getElementById('c-monthPills');
+  let h=`<button class="month-pill month-pill-all${state.month==='all'?' active':''}" data-m="all">Todas</button>`;
+  ms.forEach(m=>{
+    const mo=m.slice(5);
+    h+=`<button class="month-pill${state.month===m?' active':''}" data-m="${m}">${MONTH_NAMES[mo]||mo}</button>`;
+  });
+  el.innerHTML=h;
+  el.querySelectorAll('.month-pill').forEach(b=>b.addEventListener('click',()=>{state.month=b.dataset.m;render();}));
 }
 
-document.getElementById('w-detailCloseBtn').addEventListener('click', closeDealDetail);
-document.getElementById('w-detailOverlay').addEventListener('click', e => {
-  if(e.target.id === 'detailOverlay') closeDealDetail();
-});
-document.addEventListener('keydown', e => {
-  if(e.key === 'Escape' && document.getElementById('w-detailOverlay').classList.contains('open')) closeDealDetail();
-});
+function renderStats(rows){
+  const withData=rows.filter(c=>c[4]>0).length;
+  const gmv=rows.reduce((s,c)=>s+c[4],0);
+  const ord=rows.reduce((s,c)=>s+c[5],0);
+  document.getElementById('c-statsBar').innerHTML=
+    '<div class="cms-stat"><span class="cms-stat-val">'+rows.length+'</span><span class="cms-stat-lbl">Campanas</span></div>'+
+    '<div class="cms-stat"><span class="cms-stat-val">'+withData+'</span><span class="cms-stat-lbl">Con GMV</span></div>'+
+    '<div class="cms-stat"><span class="cms-stat-val">'+(gmv>0?'$'+gmv.toFixed(1)+' MM':'--')+'</span><span class="cms-stat-lbl">GMV Chile</span></div>'+
+    '<div class="cms-stat"><span class="cms-stat-val">'+(ord>0?ord.toLocaleString('es-CL'):'--')+'</span><span class="cms-stat-lbl">Ordenes</span></div>';
+}
 
-document.getElementById('w-generatedStamp').textContent = `Generado: ${GENERATED_AT}`;
+function renderTable(rows){
+  const tbody=document.getElementById('c-tbody');
+  const nodata=document.getElementById('c-nodata');
+  if(!rows.length){tbody.innerHTML='';nodata.style.display='';return;}
+  nodata.style.display='none';
+  const dash='<td class="cms-muted">--</td>';
+  tbody.innerHTML=rows.map(c=>{
+    const g=c[4]>0;
+    return '<tr>'+
+      '<td class="cms-td-name">'+ttl(c[0])+'</td>'+
+      '<td class="cms-td-date">'+fmtDate(c[1])+'</td>'+
+      '<td class="cms-td-date">'+fmtDate(c[2])+'</td>'+
+      '<td class="cms-td-num">'+c[3].toLocaleString('es-CL')+'</td>'+
+      (g?'<td class="cms-gmv">$'+c[4].toFixed(2)+' MM</td>':dash)+
+      (g?'<td class="cms-td-num">'+c[5].toLocaleString('es-CL')+'</td>':dash)+
+      (g?'<td class="cms-td-num">$'+c[6].toFixed(3)+' MM</td>':dash)+
+      (g?'<td class="cms-td-num">$'+c[7].toFixed(3)+' MM</td>':dash)+
+      '</tr>';
+  }).join('');
+}
 
-document.getElementById('w-refreshBtn').addEventListener('click', () => {
-  document.getElementById('w-detailModalBody').innerHTML = `
-    <div class="refresh-modal-body">
-      <h2>¿Cómo actualizo esta vista?</h2>
-      <p>Esta página no puede traer datos nuevos por sí sola — necesita que vuelvas a la conversación con Claude y pidas una versión nueva.</p>
-      <div class="step">1. Abre tu chat de Claude donde armamos este tracker.</div>
-      <div class="step">2. Escribe algo como: "regenera la vista semanal de Top Deals para la semana del [fecha]".</div>
-      <div class="step">3. Claude corre las queries en Snowflake y Google Sheets, y te entrega un archivo nuevo.</div>
-      <p style="margin-top:14px;">Este snapshot se generó el <b>${escapeHtml(GENERATED_AT)}</b>.</p>
-    </div>
-  `;
-  const overlay = document.getElementById('w-detailOverlay');
-  overlay.classList.add('open');
-  overlay.setAttribute('aria-hidden', 'false');
-  document.getElementById('w-detailCloseBtn').focus();
-});
+function render(){const rows=filtered();renderPills();renderStats(rows);renderTable(rows);}
 
+document.getElementById('c-search').addEventListener('input',function(e){state.q=e.target.value;render();});
+
+render();
 })();</script>
 </body>
 </html>
+
