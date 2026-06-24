@@ -1247,6 +1247,104 @@ footer{
 @media (max-width: 540px){
   .cal-grid{ grid-template-columns: 1fr; padding: 12px 14px; }
 }
+/* Week navigation bar */
+.week-nav-bar{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 14px 24px;
+  background: var(--turbo-violet);
+}
+.week-nav-btn{
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.4);
+  color: white;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.week-nav-btn:hover:not(:disabled){ background: rgba(255,255,255,0.28); }
+.week-nav-btn:disabled{ opacity: 0.3; cursor: default; }
+.week-nav-info{ text-align: center; }
+.week-nav-label{
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.01em;
+}
+.week-nav-counter{
+  font-size: 11px;
+  color: rgba(255,255,255,0.65);
+  margin-top: 2px;
+  font-family: var(--mono);
+}
+/* Promo cards — single-week wider layout */
+.promo-week-grid{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 20px 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.promo-card{
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: box-shadow 0.15s, transform 0.12s;
+}
+.promo-card:hover{ box-shadow: 0 6px 20px rgba(0,0,0,0.08); transform: translateY(-1px); }
+.promo-card-img{
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: var(--paper-dim);
+  flex-shrink: 0;
+  border: 1px solid var(--line-soft);
+}
+.promo-card-img-ph{
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  background: var(--paper-dim);
+  flex-shrink: 0;
+  border: 1px solid var(--line-soft);
+}
+.promo-card-body{ flex: 1; min-width: 0; }
+.promo-card-top{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.promo-card-disc{
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--fire);
+  line-height: 1;
+}
+.promo-card-rank{ font-family: var(--mono); font-size: 10px; color: var(--mute); margin-right: auto; }
+.promo-card-name{ font-weight: 700; font-size: 13px; line-height: 1.3; margin-bottom: 3px; }
+.promo-card-maker{ font-size: 11.5px; color: var(--mute); margin-bottom: 6px; }
+.promo-card-dates{ font-family: var(--mono); font-size: 10.5px; color: var(--turbo-violet); }
+@media (max-width: 620px){ .promo-week-grid{ grid-template-columns: 1fr; padding: 12px 14px; } }
 
 /* ============ DETAIL MODAL ============ */
 .detail-overlay{
@@ -1425,7 +1523,7 @@ footer{
   </div>
   <nav class="tab-nav">
     <button class="tab-btn active" data-tab="planificado">📋 Planificado (Calendario)</button>
-    <button class="tab-btn" data-tab="wms">✅ Verificado en WMS</button>
+    <button class="tab-btn" data-tab="wms">📅 Calendario Promos Top</button>
   </nav>
 </header>
 <div class="tab-panel active" id="tab-planificado">
@@ -1519,14 +1617,14 @@ footer{
   </div>
 </div>
 <div class="tab-panel" id="tab-wms">
-  <div style="padding:14px 24px;background:var(--turbo-violet);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-    <span style="color:white;font-size:13px;font-weight:600;">📅 Top 5 por semana · Jun — Jul 2026</span>
-    <div class="refresh-row" style="margin-top:0;margin-left:auto;">
-      <button id="w-refreshBtn" class="refresh-btn">⟳ Pedir actualización</button>
-      <span class="generated-stamp" id="w-generatedStamp">Generado: —</span>
+  <div class="week-nav-bar">
+    <button id="w-prevWeek" class="week-nav-btn" aria-label="Semana anterior" disabled>&#8592;</button>
+    <div class="week-nav-info">
+      <div class="week-nav-label" id="w-weekLabel">—</div>
+      <div class="week-nav-counter" id="w-weekCounter"></div>
     </div>
+    <button id="w-nextWeek" class="week-nav-btn" aria-label="Semana siguiente">&#8594;</button>
   </div>
-  <div class="snapshot-note" id="w-snapshotNote">⚠ Esta vista es una FOTO al momento de generarla — no se actualiza sola.</div>
   <div class="legend">
     <div class="legend-item"><span class="legend-dot" style="background:var(--ok)"></span> Cargado en WMS (campaña manual activa)</div>
     <div class="legend-item"><span class="legend-dot" style="background:var(--warn)"></span> Solo promo automática (por vencimiento)</div>
@@ -2604,46 +2702,49 @@ for (const wk of weekKeys) {
 
 const container = document.getElementById('w-dealsContainer');
 const calendarDeals = [];
+let currentWeekIdx = 0;
 
 function renderCalendar(){
   calendarDeals.length = 0;
 
-  container.innerHTML = `<div class="cal-grid">${weekKeys.map(wk => {
-    const deals = dealsByStartWeek[wk];
-    return `<div class="cal-week">
-      <div class="cal-week-header">${escapeHtml(WEEK_LABELS[wk])}</div>
-      ${deals.length === 0
-        ? '<div class="cal-empty">Sin promos nuevas esta semana</div>'
-        : deals.map((d, i) => {
-            const idx = calendarDeals.length;
-            calendarDeals.push({deal: d, rank: i + 1});
-            const imgUrl = EAN_IMAGES[d.ean] || null;
-            return `<div class="cal-deal-card" data-idx="${idx}" tabindex="0" role="button" aria-label="Ver detalle de ${escapeHtml(d.productName)}">
-              <div class="cal-deal-top">
-                <span class="cal-deal-disc">${d.discountPct.toFixed(0)}%</span>
-                <span class="cal-deal-rank">#${i + 1}</span>
-                <span class="wms-dot ${escapeHtml(d.wmsStatus)}" title="${escapeHtml(WMS_LABELS[d.wmsStatus])}"></span>
-              </div>
-              <div class="cal-deal-card-body">
-                ${imgUrl
-                  ? `<img class="cal-deal-thumb" src="${escapeHtml(imgUrl)}" alt="" loading="lazy">`
-                  : `<div class="cal-deal-thumb-placeholder"></div>`}
-                <div class="cal-deal-content">
-                  <div class="cal-deal-name">${escapeHtml(d.productName)}</div>
-                  <div class="cal-deal-maker">${escapeHtml(d.maker || '—')}</div>
-                  <div class="cal-deal-dates">
-                    <span>Inicia ${fmtDate(d.startDate)}</span>
-                    <span>→ termina ${fmtDate(d.endDate)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>`;
-          }).join('')
-      }
+  const wk = weekKeys[currentWeekIdx];
+  const deals = dealsByStartWeek[wk] || [];
+
+  // Update nav bar
+  document.getElementById('w-weekLabel').textContent = WEEK_LABELS[wk] || wk;
+  document.getElementById('w-weekCounter').textContent = `Semana ${currentWeekIdx + 1} de ${weekKeys.length}`;
+  document.getElementById('w-prevWeek').disabled = currentWeekIdx === 0;
+  document.getElementById('w-nextWeek').disabled = currentWeekIdx === weekKeys.length - 1;
+
+  if(deals.length === 0){
+    container.innerHTML = '<div class="cal-empty" style="padding:40px 24px;text-align:center;">Sin promos nuevas esta semana</div>';
+    return;
+  }
+
+  container.innerHTML = `<div class="promo-week-grid">${deals.map((d, i) => {
+    const idx = calendarDeals.length;
+    calendarDeals.push({deal: d, rank: i + 1});
+    const imgUrl = EAN_IMAGES[d.ean] || null;
+    return `<div class="promo-card" data-idx="${idx}" tabindex="0" role="button" aria-label="Ver detalle de ${escapeHtml(d.productName)}">
+      ${imgUrl
+        ? `<img class="promo-card-img" src="${escapeHtml(imgUrl)}" alt="" loading="lazy">`
+        : `<div class="promo-card-img-ph"></div>`}
+      <div class="promo-card-body">
+        <div class="promo-card-top">
+          <span class="promo-card-disc">${d.discountPct.toFixed(0)}%</span>
+          <span class="promo-card-rank">#${i + 1}</span>
+          <span class="wms-dot ${escapeHtml(d.wmsStatus)}" title="${escapeHtml(WMS_LABELS[d.wmsStatus])}"></span>
+        </div>
+        <div class="promo-card-name">${escapeHtml(d.productName)}</div>
+        <div class="promo-card-maker">${escapeHtml(d.maker || '—')}</div>
+        <div class="promo-card-dates">
+          Inicia ${fmtDate(d.startDate)} → termina ${fmtDate(d.endDate)}
+        </div>
+      </div>
     </div>`;
   }).join('')}</div>`;
 
-  container.querySelectorAll('.cal-deal-card').forEach(card => {
+  container.querySelectorAll('.promo-card').forEach(card => {
     const idx = parseInt(card.dataset.idx, 10);
     const {deal, rank} = calendarDeals[idx];
     const trigger = () => openDealDetail(deal, rank);
@@ -2651,6 +2752,13 @@ function renderCalendar(){
     card.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); trigger(); } });
   });
 }
+
+document.getElementById('w-prevWeek').addEventListener('click', () => {
+  if(currentWeekIdx > 0){ currentWeekIdx--; renderCalendar(); }
+});
+document.getElementById('w-nextWeek').addEventListener('click', () => {
+  if(currentWeekIdx < weekKeys.length - 1){ currentWeekIdx++; renderCalendar(); }
+});
 
 renderCalendar();
 
@@ -2747,24 +2855,6 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && document.getElementById('w-detailOverlay').classList.contains('open')) closeDealDetail();
 });
 
-document.getElementById('w-generatedStamp').textContent = `Generado: ${GENERATED_AT}`;
-
-document.getElementById('w-refreshBtn').addEventListener('click', () => {
-  document.getElementById('w-detailModalBody').innerHTML = `
-    <div class="refresh-modal-body">
-      <h2>¿Cómo actualizo esta vista?</h2>
-      <p>Esta página no puede traer datos nuevos por sí sola — necesita que vuelvas a la conversación con Claude y pidas una versión nueva.</p>
-      <div class="step">1. Abre tu chat de Claude donde armamos este tracker.</div>
-      <div class="step">2. Escribe algo como: "regenera la vista semanal de Top Deals para la semana del [fecha]".</div>
-      <div class="step">3. Claude corre las queries en Snowflake y Google Sheets, y te entrega un archivo nuevo.</div>
-      <p style="margin-top:14px;">Este snapshot se generó el <b>${escapeHtml(GENERATED_AT)}</b>.</p>
-    </div>
-  `;
-  const overlay = document.getElementById('w-detailOverlay');
-  overlay.classList.add('open');
-  overlay.setAttribute('aria-hidden', 'false');
-  document.getElementById('w-detailCloseBtn').focus();
-});
 
 })();</script>
 </body>
