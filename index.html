@@ -1213,6 +1213,52 @@ h1{
 .cms-gmv{ font-family: var(--mono); font-size: 12px; text-align: right; color: var(--ok); font-weight: 600; }
 .cms-muted{ font-family: var(--mono); font-size: 12px; text-align: right; color: var(--mute); }
 .cms-nodata{ padding: 48px; text-align: center; color: var(--mute); font-size: 14px; }
+.cal-controls{padding:14px 24px;background:var(--turbo-violet);display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.cal-search{flex:1;min-width:180px;max-width:280px;padding:7px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:13px;}
+.cal-search::placeholder{color:rgba(255,255,255,.5);}
+.cal-search:focus{outline:none;border-color:var(--turbo-yellow);}
+.cal-nav{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.cal-nav-btn{background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2);border-radius:8px;padding:6px 14px;color:#fff;font-size:13px;cursor:pointer;transition:background .15s;line-height:1;}
+.cal-nav-btn:hover{background:rgba(255,255,255,.28);}
+.cal-month-lbl{font-size:15px;font-weight:700;color:#fff;min-width:130px;text-align:center;}
+.cal-stats-bar{display:flex;gap:28px;padding:10px 24px;background:var(--bg);border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;}
+.cal-stat{display:flex;flex-direction:column;align-items:center;}
+.cal-stat-val{font-size:16px;font-weight:700;color:var(--text);font-family:var(--mono);}
+.cal-stat-lbl{font-size:10px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;}
+.cal-wrap{padding:12px 24px 24px;overflow-x:auto;}
+.cal-grid{min-width:560px;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);background:var(--card);border-bottom:2px solid var(--border);}
+.cal-dow{padding:8px 0;text-align:center;font-size:10.5px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;}
+.cal-week{border-bottom:1px solid var(--border);}
+.cal-week:last-child{border-bottom:none;}
+.cal-day-nums{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-day-num{padding:5px 7px 3px;font-size:11.5px;color:var(--mute);border-right:1px solid var(--border);min-height:24px;}
+.cal-day-num:last-child{border-right:none;}
+.cal-day-num.is-today{color:var(--turbo-yellow);font-weight:700;background:rgba(240,185,11,.08);}
+.cal-day-num.out-month{opacity:.3;}
+.cal-bands{padding:2px 4px 4px;display:flex;flex-direction:column;gap:1px;}
+.cal-band{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-bar{height:20px;border-radius:4px;font-size:10.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px;line-height:20px;cursor:pointer;color:#fff;opacity:.9;}
+.cal-bar:hover{opacity:1;filter:brightness(1.1);}
+.cal-bar.no-data{opacity:.52;}
+.cal-bar.cont-left{border-radius:0 4px 4px 0;}
+.cal-bar.cont-right{border-radius:4px 0 0 4px;}
+.cal-bar.cont-both{border-radius:0;}
+.cal-overflow{font-size:10.5px;color:var(--mute);padding:2px 8px 3px;}
+.cal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .18s;}
+.cal-overlay.open{opacity:1;pointer-events:auto;}
+.cal-modal{background:var(--card);border-radius:14px;padding:0;max-width:420px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35);}
+.cal-modal-head{padding:20px 20px 16px;border-radius:14px 14px 0 0;position:relative;}
+.cal-modal-close{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.2);border:none;border-radius:50%;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;line-height:28px;text-align:center;}
+.cal-modal-close:hover{background:rgba(255,255,255,.35);}
+.cal-modal-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;padding-right:36px;}
+.cal-modal-dates{font-size:12px;color:rgba(255,255,255,.8);font-family:var(--mono);}
+.cal-modal-body{padding:16px 20px 20px;}
+.cal-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;}
+.cal-modal-field{background:var(--bg);border-radius:8px;padding:10px 12px;}
+.cal-modal-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);margin-bottom:3px;}
+.cal-modal-val{font-size:14px;font-weight:600;color:var(--text);font-family:var(--mono);}
+.cal-modal-note{font-size:11px;color:var(--mute);margin-top:8px;}
 
 footer{
   text-align:center;
@@ -1503,31 +1549,24 @@ footer{
   </div>
 </div>
 <div class="tab-panel" id="tab-wms">
-  <div class="cms-controls">
-    <input type="search" id="c-search" class="cms-search" placeholder="Buscar campaña…" autocomplete="off">
-    <div class="month-pills" id="c-monthPills" style="flex:1;justify-content:flex-end;flex-wrap:wrap;"></div>
+  <div class="cal-controls">
+    <input type="search" id="c-search" class="cal-search" placeholder="Buscar campaña…" autocomplete="off">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" id="c-prev">&#9664;</button>
+      <span class="cal-month-lbl" id="c-month-lbl">Junio 2026</span>
+      <button class="cal-nav-btn" id="c-next">&#9654;</button>
+    </div>
   </div>
-  <div class="cms-stats-bar" id="c-statsBar"></div>
-  <div class="cms-note">GMV y órdenes de artículos con descuento activo en el motor de promociones (INTEGRATION_PAYMENTS_EXECUTION_LOG). Las campañas sin registro en Snowflake muestran "—".</div>
-  <div class="cms-table-wrap">
-    <table class="cms-table">
-      <thead>
-        <tr>
-          <th>Campaña</th>
-          <th>Inicio</th>
-          <th>Fin</th>
-          <th style="text-align:right">GOs</th>
-          <th style="text-align:right">GMV CL</th>
-          <th style="text-align:right">Órdenes</th>
-          <th style="text-align:right">Burn Maker</th>
-          <th style="text-align:right">Burn Rappi</th>
-        </tr>
-      </thead>
-      <tbody id="c-tbody"></tbody>
-    </table>
-    <div id="c-nodata" class="cms-nodata" style="display:none">Sin resultados para este filtro.</div>
+  <div class="cal-stats-bar" id="c-statsBar"></div>
+  <div class="cal-wrap">
+    <div class="cal-grid" id="c-cal-grid"></div>
   </div>
-  <footer>Fuente: Snowflake PROMOTION_ENGINE · INTEGRATION_PAYMENTS_EXECUTION_LOG · snapshot al 24 jun 2026 · Campañas mar–jun 2026</footer>
+  <div class="cal-overlay" id="c-detail-overlay" aria-hidden="true">
+    <div class="cal-modal">
+      <div id="c-detail-body"></div>
+    </div>
+  </div>
+  <footer>Fuente: Snowflake PROMOTION_ENGINE &middot; INTEGRATION_PAYMENTS_EXECUTION_LOG &middot; snapshot al 24 jun 2026 &middot; Campañas mar&ndash;jun 2026</footer>
 </div>
 <script>
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -2999,9 +3038,20 @@ const CAMPS=[
 ["IN AND OUT DIA DEL PADRE MARLEY","2026-06-23","2026-06-30",1,0,0,0,0]
 ];
 
-const MONTH_NAMES={'02':'Feb','03':'Mar','04':'Abr','05':'May','06':'Jun','07':'Jul'};
+const MONTH_NAMES_LONG=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DOW_LABELS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const CAL_PALETTE=['#6741d9','#c92a2a','#0b7285','#b35200','#1864ab','#a61e4d','#2b8a3e','#862e9c','#e67700','#087f5b','#5c7cfa','#5c940d'];
+const MAX_LANES=8;
 
-function ttl(s){
+function campColor(name){
+  let h=0;
+  for(let i=0;i<name.length;i++) h=((h*31)+name.charCodeAt(i))>>>0;
+  return CAL_PALETTE[h%CAL_PALETTE.length];
+}
+
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function calTtl(s){
   const low=new Set(['de','del','la','el','los','las','en','con','para','a','al','o','y','e','ni','sin','por']);
   return s.replace(/\S+/g,(w,i)=>{
     if(i>0&&low.has(w.toLowerCase()))return w.toLowerCase();
@@ -3009,70 +3059,183 @@ function ttl(s){
   });
 }
 
-function fmtDate(s){const p=s.slice(5).split('-');return p[1]+'/'+p[0];}
+function fmtD(s){const p=s.slice(5).split('-');return p[1]+'/'+p[0];}
 
-let state={month:'all',q:''};
-
-function uniqueMonths(){const seen=new Set();CAMPS.forEach(c=>seen.add(c[1].slice(0,7)));return [...seen].sort();}
-
-function filtered(){
-  const q=state.q.toLowerCase().trim();
-  return CAMPS.filter(c=>{
-    let mok=true;
-    if(state.month!=='all'){mok=c[1]<=state.month+'-31'&&c[2]>=state.month+'-01';}
-    return mok&&(!q||c[0].toLowerCase().includes(q));
-  });
+function getCalWeeks(year,month){
+  const first=new Date(Date.UTC(year,month-1,1));
+  const last=new Date(Date.UTC(year,month,0));
+  const startDow=(first.getUTCDay()+6)%7;
+  let cur=new Date(Date.UTC(year,month-1,1-startDow));
+  const weeks=[];
+  while(true){
+    const wk=[];
+    for(let i=0;i<7;i++){
+      wk.push(cur.toISOString().slice(0,10));
+      cur.setUTCDate(cur.getUTCDate()+1);
+    }
+    weeks.push(wk);
+    if(cur>last) break;
+  }
+  return weeks;
 }
 
-function renderPills(){
-  const ms=uniqueMonths();
-  const el=document.getElementById('c-monthPills');
-  let h=`<button class="month-pill month-pill-all${state.month==='all'?' active':''}" data-m="all">Todas</button>`;
-  ms.forEach(m=>{
-    const mo=m.slice(5);
-    h+=`<button class="month-pill${state.month===m?' active':''}" data-m="${m}">${MONTH_NAMES[mo]||mo}</button>`;
+function assignLanes(camps){
+  const sorted=[...camps].sort((a,b)=>{
+    const ds=a.start.localeCompare(b.start);
+    if(ds!==0) return ds;
+    const de=b.end.localeCompare(a.end);
+    if(de!==0) return de;
+    return b.gos-a.gos;
   });
-  el.innerHTML=h;
-  el.querySelectorAll('.month-pill').forEach(b=>b.addEventListener('click',()=>{state.month=b.dataset.m;render();}));
+  const laneEnds=[];
+  for(const c of sorted){
+    let lane=0;
+    while(laneEnds[lane]!==undefined&&laneEnds[lane]>=c.start) lane++;
+    c._lane=lane;
+    laneEnds[lane]=c.end;
+  }
+  return sorted;
 }
 
-function renderStats(rows){
-  const withData=rows.filter(c=>c[4]>0).length;
-  const gmv=rows.reduce((s,c)=>s+c[4],0);
-  const ord=rows.reduce((s,c)=>s+c[5],0);
+let calState={year:2026,month:6,q:''};
+
+function calActiveCamps(year,month,q){
+  const mStr=String(month).padStart(2,'0');
+  const mStart=year+'-'+mStr+'-01';
+  const lastD=new Date(Date.UTC(year,month,0)).toISOString().slice(0,10);
+  const ql=q.toLowerCase().trim();
+  return CAMPS
+    .map(c=>({name:c[0],start:c[1],end:c[2],gos:c[3],gmv:c[4],orders:c[5],burnMaker:c[6],burnRappi:c[7]}))
+    .filter(c=>c.start<=lastD&&c.end>=mStart&&(!ql||c.name.toLowerCase().includes(ql)));
+}
+
+function renderCalendar(){
+  const {year,month,q}=calState;
+  document.getElementById('c-month-lbl').textContent=MONTH_NAMES_LONG[month-1]+' '+year;
+
+  const camps=calActiveCamps(year,month,q);
+  const withLane=assignLanes(camps);
+
+  const withGMV=camps.filter(c=>c.gmv>0).length;
+  const totGMV=camps.reduce((s,c)=>s+c.gmv,0);
+  const totOrd=camps.reduce((s,c)=>s+c.orders,0);
   document.getElementById('c-statsBar').innerHTML=
-    '<div class="cms-stat"><span class="cms-stat-val">'+rows.length+'</span><span class="cms-stat-lbl">Campanas</span></div>'+
-    '<div class="cms-stat"><span class="cms-stat-val">'+withData+'</span><span class="cms-stat-lbl">Con GMV</span></div>'+
-    '<div class="cms-stat"><span class="cms-stat-val">'+(gmv>0?'$'+gmv.toFixed(1)+' MM':'--')+'</span><span class="cms-stat-lbl">GMV Chile</span></div>'+
-    '<div class="cms-stat"><span class="cms-stat-val">'+(ord>0?ord.toLocaleString('es-CL'):'--')+'</span><span class="cms-stat-lbl">Ordenes</span></div>';
+    '<div class="cal-stat"><span class="cal-stat-val">'+camps.length+'</span><span class="cal-stat-lbl">Campañas</span></div>'+
+    '<div class="cal-stat"><span class="cal-stat-val">'+withGMV+'</span><span class="cal-stat-lbl">Con GMV</span></div>'+
+    '<div class="cal-stat"><span class="cal-stat-val">'+(totGMV>0?'$'+totGMV.toFixed(1)+' MM':'—')+'</span><span class="cal-stat-lbl">GMV Chile</span></div>'+
+    '<div class="cal-stat"><span class="cal-stat-val">'+(totOrd>0?totOrd.toLocaleString('es-CL'):'—')+'</span><span class="cal-stat-lbl">Órdenes</span></div>';
+
+  const weeks=getCalWeeks(year,month);
+  const now=new Date();
+  const today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  const mStr=year+'-'+String(month).padStart(2,'0');
+
+  let html='<div class="cal-dow-row">'+DOW_LABELS.map(d=>'<div class="cal-dow">'+d+'</div>').join('')+'</div>';
+
+  for(const wk of weeks){
+    html+='<div class="cal-week">';
+
+    html+='<div class="cal-day-nums">';
+    for(const day of wk){
+      const cls=(day===today?' is-today':'')+(day.slice(0,7)!==mStr?' out-month':'');
+      html+='<div class="cal-day-num'+cls+'">'+parseInt(day.slice(8),10)+'</div>';
+    }
+    html+='</div>';
+
+    const wkStart=wk[0],wkEnd=wk[6];
+    const wkCamps=withLane.filter(c=>c.start<=wkEnd&&c.end>=wkStart);
+
+    if(wkCamps.length===0){
+      html+='<div style="height:6px"></div>';
+    }else{
+      html+='<div class="cal-bands">';
+      const usedLanes=[...new Set(wkCamps.map(c=>c._lane))].sort((a,b)=>a-b);
+      const visLanes=usedLanes.slice(0,MAX_LANES);
+      const overCount=wkCamps.filter(c=>c._lane>=MAX_LANES).length;
+
+      for(const lane of visLanes){
+        const lc=wkCamps.filter(c=>c._lane===lane);
+        html+='<div class="cal-band">';
+        for(const c of lc){
+          const eS=c.start<wkStart?wkStart:c.start;
+          const eE=c.end>wkEnd?wkEnd:c.end;
+          const col=wk.indexOf(eS);
+          const endCol=wk.indexOf(eE);
+          if(col===-1||endCol===-1) continue;
+          const cL=c.start<wkStart,cR=c.end>wkEnd;
+          const rCls=cL&&cR?' cont-both':cL?' cont-left':cR?' cont-right':'';
+          const nd=c.gmv===0?' no-data':'';
+          const color=campColor(c.name);
+          html+='<div class="cal-bar'+rCls+nd+'" style="grid-column:'+(col+1)+'/'+(endCol+2)+';background:'+color+'" '
+            +'data-cn="'+escH(c.name)+'" title="'+escH(calTtl(c.name))+' | '+fmtD(c.start)+' → '+fmtD(c.end)+'">'
+            +escH(calTtl(c.name))+'</div>';
+        }
+        html+='</div>';
+      }
+      if(overCount>0) html+='<div class="cal-overflow">+ '+overCount+' más campañas</div>';
+      html+='</div>';
+    }
+    html+='</div>';
+  }
+
+  document.getElementById('c-cal-grid').innerHTML=html;
+
+  document.querySelectorAll('#c-cal-grid .cal-bar').forEach(function(el){
+    el.addEventListener('click',function(){
+      const cn=this.getAttribute('data-cn');
+      const camp=withLane.find(function(c){return c.name===cn;});
+      if(camp) openCalDetail(camp);
+    });
+  });
 }
 
-function renderTable(rows){
-  const tbody=document.getElementById('c-tbody');
-  const nodata=document.getElementById('c-nodata');
-  if(!rows.length){tbody.innerHTML='';nodata.style.display='';return;}
-  nodata.style.display='none';
-  const dash='<td class="cms-muted">--</td>';
-  tbody.innerHTML=rows.map(c=>{
-    const g=c[4]>0;
-    return '<tr>'+
-      '<td class="cms-td-name">'+ttl(c[0])+'</td>'+
-      '<td class="cms-td-date">'+fmtDate(c[1])+'</td>'+
-      '<td class="cms-td-date">'+fmtDate(c[2])+'</td>'+
-      '<td class="cms-td-num">'+c[3].toLocaleString('es-CL')+'</td>'+
-      (g?'<td class="cms-gmv">$'+c[4].toFixed(2)+' MM</td>':dash)+
-      (g?'<td class="cms-td-num">'+c[5].toLocaleString('es-CL')+'</td>':dash)+
-      (g?'<td class="cms-td-num">$'+c[6].toFixed(3)+' MM</td>':dash)+
-      (g?'<td class="cms-td-num">$'+c[7].toFixed(3)+' MM</td>':dash)+
-      '</tr>';
-  }).join('');
+function openCalDetail(camp){
+  const color=campColor(camp.name);
+  const hg=camp.gmv>0;
+  document.getElementById('c-detail-body').innerHTML=
+    '<div class="cal-modal-head" style="background:'+color+'">'
+    +'<button class="cal-modal-close" id="c-det-close">✕</button>'
+    +'<div class="cal-modal-name">'+escH(calTtl(camp.name))+'</div>'
+    +'<div class="cal-modal-dates">'+fmtD(camp.start)+' → '+fmtD(camp.end)+'</div>'
+    +'</div>'
+    +'<div class="cal-modal-body">'
+    +'<div class="cal-modal-grid">'
+    +'<div class="cal-modal-field"><div class="cal-modal-label">GOs activas</div><div class="cal-modal-val">'+camp.gos.toLocaleString('es-CL')+'</div></div>'
+    +'<div class="cal-modal-field"><div class="cal-modal-label">GMV Chile</div><div class="cal-modal-val">'+(hg?'$'+camp.gmv.toFixed(2)+' MM':'—')+'</div></div>'
+    +'<div class="cal-modal-field"><div class="cal-modal-label">Órdenes</div><div class="cal-modal-val">'+(hg?camp.orders.toLocaleString('es-CL'):'—')+'</div></div>'
+    +'<div class="cal-modal-field"><div class="cal-modal-label">Burn Maker</div><div class="cal-modal-val">'+(hg&&camp.burnMaker>0?'$'+camp.burnMaker.toFixed(3)+' MM':'—')+'</div></div>'
+    +'</div>'
+    +(hg?'<div class="cal-modal-note">Fuente: Snowflake INTEGRATION_PAYMENTS_EXECUTION_LOG</div>':'')
+    +'</div>';
+  document.getElementById('c-det-close').addEventListener('click',closeCalDetail);
+  const ov=document.getElementById('c-detail-overlay');
+  ov.classList.add('open');
+  ov.setAttribute('aria-hidden','false');
 }
 
-function render(){const rows=filtered();renderPills();renderStats(rows);renderTable(rows);}
+function closeCalDetail(){
+  const ov=document.getElementById('c-detail-overlay');
+  ov.classList.remove('open');
+  ov.setAttribute('aria-hidden','true');
+}
 
-document.getElementById('c-search').addEventListener('input',function(e){state.q=e.target.value;render();});
+document.getElementById('c-detail-overlay').addEventListener('click',function(e){if(e.target===this)closeCalDetail();});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&document.getElementById('c-detail-overlay').classList.contains('open'))closeCalDetail();
+});
+document.getElementById('c-prev').addEventListener('click',function(){
+  calState.month--;
+  if(calState.month<1){calState.month=12;calState.year--;}
+  renderCalendar();
+});
+document.getElementById('c-next').addEventListener('click',function(){
+  calState.month++;
+  if(calState.month>12){calState.month=1;calState.year++;}
+  renderCalendar();
+});
+document.getElementById('c-search').addEventListener('input',function(e){calState.q=e.target.value;renderCalendar();});
 
-render();
+renderCalendar();
 })();</script>
 </body>
 </html>
