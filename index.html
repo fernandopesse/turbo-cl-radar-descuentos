@@ -382,17 +382,32 @@ td.impact-cell{ padding: 0; min-width: 100px; }
   overflow: hidden;
 }
 .controls{
-  padding: 18px 20px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--line-soft);
-  display:flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items:center;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
   background: var(--paper-dim);
+}
+.ctrl-row{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.ctrl-row-search .search-box{ flex: 2 1 240px; }
+.ctrl-row-search .date-range-wrap{ flex: 1 1 auto; }
+.ctrl-label{
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 .search-box{
   position:relative;
-  flex: 1 1 240px;
   min-width: 200px;
 }
 .search-box input{
@@ -492,23 +507,36 @@ select, .chip-select{
 select:focus{ border-color: var(--turbo-violet); }
 #campaignFilter{ max-width: 220px; }
 
-.disc-slider-wrap{
-  display:flex;
-  align-items:center;
-  gap: 8px;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--mute);
-  background: white;
+.month-pills{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+.month-pill{
   border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 7px 12px;
+  background: white;
+  border-radius: 7px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: var(--body);
+  cursor: pointer;
+  color: var(--mute);
+  transition: all 0.12s;
+  line-height: 1;
 }
-.disc-slider-wrap input[type=range]{
-  width: 110px;
-  accent-color: var(--turbo-violet);
+.month-pill:hover{ border-color: var(--turbo-violet); color: var(--turbo-violet); }
+.month-pill.active{
+  background: var(--turbo-violet);
+  border-color: var(--turbo-violet);
+  color: white;
 }
-.disc-slider-wrap b{ color: var(--ink); min-width: 30px; }
+.month-pill-all{
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
 
 .code-select-wrap{
   display:flex;
@@ -1329,43 +1357,45 @@ footer{
     </section>
     <section class="panel">
       <div class="controls">
-        <div class="search-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input type="text" id="m-searchInput" placeholder="Buscar producto, EAN, Sync, Content Portal ID, maker o campaña…">
+        <div class="ctrl-row ctrl-row-search">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="m-searchInput" placeholder="Buscar producto, EAN, Sync, Content Portal ID, maker o campaña…">
+          </div>
+          <div class="date-range-wrap">
+            <input type="date" id="m-dateFrom" title="Vigente desde">
+            <span class="date-range-sep">—</span>
+            <input type="date" id="m-dateTo" title="Vigente hasta">
+            <button id="m-dateClearBtn" class="date-clear-btn" title="Limpiar rango de fechas">✕</button>
+            <span class="date-mode-sep">|</span>
+            <button id="m-dateModeBtn" class="date-mode-btn" title="Cambiar modo de filtro de fecha">Vigente</button>
+          </div>
         </div>
-        <div class="date-range-wrap">
-          <span class="date-range-label">Vigente entre:</span>
-          <input type="date" id="m-dateFrom" title="Desde">
-          <span class="date-range-sep">—</span>
-          <input type="date" id="m-dateTo" title="Hasta">
-          <button id="m-dateClearBtn" class="date-clear-btn" title="Limpiar rango de fechas">✕</button>
-          <span class="date-mode-sep">|</span>
-          <button id="m-dateModeBtn" class="date-mode-btn" title="Cambiar modo de filtro de fecha">Vigente</button>
+        <div class="ctrl-row ctrl-row-months">
+          <span class="ctrl-label">Mes</span>
+          <div class="month-pills" id="m-monthFilter"></div>
         </div>
-        <select id="m-yearFilter"><option value="">Todos los años</option></select>
-        <select id="m-quarterFilter"><option value="">Todos los trimestres</option></select>
-        <select id="m-monthFilter"><option value="">Todos los meses</option></select>
-        <select id="m-makerFilter"><option value="">Todos los makers</option></select>
-        <select id="m-campaignFilter"><option value="">Todas las campañas</option></select>
-        <select id="m-statusFilter"><option value="">Todos los estados</option></select>
-        <div class="code-select-wrap">
-          <label for="m-codeFieldSelect">Código:</label>
-          <select id="m-codeFieldSelect">
-            <option value="ean">EAN</option>
-            <option value="sync">Sync</option>
-            <option value="productId">Content Portal ID</option>
-          </select>
+        <div class="ctrl-row ctrl-row-filters">
+          <select id="m-quarterFilter"><option value="">Todos los trimestres</option></select>
+          <select id="m-makerFilter"><option value="">Todos los makers</option></select>
+          <select id="m-campaignFilter"><option value="">Todas las campañas</option></select>
+          <select id="m-statusFilter"><option value="">Todos los estados</option></select>
+          <div class="code-select-wrap">
+            <label for="m-codeFieldSelect">Código:</label>
+            <select id="m-codeFieldSelect">
+              <option value="ean">EAN</option>
+              <option value="sync">Sync</option>
+              <option value="productId">Content Portal ID</option>
+            </select>
+          </div>
+          <div class="toggle-btns" id="m-sortToggle">
+            <button data-sort="impactScore" class="active">⚡ Mayor impacto</button>
+            <button data-sort="discountPct">Más llamativo</button>
+            <button data-sort="endDate">Vence pronto</button>
+            <button data-sort="campaign">A–Z campaña</button>
+          </div>
+          <button class="reset-btn" id="m-resetBtn">↺ Limpiar filtros</button>
         </div>
-        <div class="disc-slider-wrap">
-          Desc. mín. <input type="range" id="m-discSlider" min="0" max="75" value="0" step="1"> <b id="m-discSliderVal">0%</b>
-        </div>
-        <div class="toggle-btns" id="m-sortToggle">
-          <button data-sort="impactScore" class="active">⚡ Mayor impacto</button>
-          <button data-sort="discountPct">Más llamativo</button>
-          <button data-sort="endDate">Vence pronto</button>
-          <button data-sort="campaign">A–Z campaña</button>
-        </div>
-        <button class="reset-btn" id="m-resetBtn">↺ Limpiar filtros</button>
       </div>
       <div class="result-bar">
         <span><b id="m-resultCount">0</b> promos encontradas</span>
@@ -1653,9 +1683,11 @@ async function loadSalesData(){
 }
 
 const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const MONTH_SHORT_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MIN_MONTH = '2026-06';
 function monthLabel(ym){
-  const [y,m] = ym.split('-');
-  return `${MONTH_NAMES[parseInt(m,10)-1]} ${y}`;
+  const m = parseInt(ym.split('-')[1], 10);
+  return MONTH_SHORT_EN[m - 1] || ym;
 }
 
 // Adds derived fields (month, quarter, year, cargaTotalPct) to each raw record coming from the sheet.
@@ -1785,19 +1817,23 @@ const QUARTER_ORDER = { Q1: 1, Q2: 2, Q3: 3, Q4: 4 };
 // still co-occur with everything else currently selected (e.g. picking month=junio hides a
 // campaign that only ever ran in mayo; picking maker BUKA hides a campaign BUKA never ran;
 // picking quarter=Q3 hides months outside July-September).
-function refreshDependentFilters(){
-  const availableYears = [...new Set(rowsExcluding('year').map(d=>d.year).filter(Boolean))].sort();
-  populateSelect(yearSel, availableYears, 'Todos los años', state.year);
-  if(!availableYears.includes(state.year)) state.year = '';
+function renderMonthPills(availableMonths){
+  const el = document.getElementById('m-monthFilter');
+  if(!el) return;
+  el.innerHTML = `<button class="month-pill month-pill-all${!state.month ? ' active' : ''}" data-month="">Todos</button>` +
+    availableMonths.map(m => `<button class="month-pill${state.month === m ? ' active' : ''}" data-month="${m}">${monthLabel(m)}</button>`).join('');
+}
 
+function refreshDependentFilters(){
   const availableQuarters = [...new Set(rowsExcluding('quarter').map(d=>d.quarter).filter(Boolean))]
     .sort((a,b) => QUARTER_ORDER[a] - QUARTER_ORDER[b]);
   populateSelect(quarterSel, availableQuarters, 'Todos los trimestres', state.quarter);
   if(!availableQuarters.includes(state.quarter)) state.quarter = '';
 
-  const availableMonths = [...new Set(rowsExcluding('month').map(d=>d.month).filter(Boolean))].sort();
-  populateSelect(monthSel, availableMonths, 'Todos los meses', state.month, monthLabel);
+  const availableMonths = [...new Set(rowsExcluding('month').map(d=>d.month).filter(Boolean))]
+    .filter(m => m >= MIN_MONTH).sort();
   if(!availableMonths.includes(state.month)) state.month = '';
+  renderMonthPills(availableMonths);
 
   const availableCampaigns = [...new Set(rowsExcluding('campaign').map(d=>d.campaign).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
   populateSelect(campaignSel, availableCampaigns, 'Todas las campañas', state.campaign);
@@ -1885,7 +1921,6 @@ let state = {
   maker: '',
   campaign: '',
   status: '',
-  minDisc: 0,
   codeField: 'ean',
   dateFrom: '',
   dateTo: '',
@@ -2008,7 +2043,6 @@ function applyFilters(){
   if(state.maker) rows = rows.filter(d => d.maker === state.maker);
   if(state.campaign) rows = rows.filter(d => d.campaign === state.campaign);
   if(state.status) rows = rows.filter(d => d.status === state.status);
-  if(state.minDisc > 0) rows = rows.filter(d => d.discountPct != null && d.discountPct >= state.minDisc);
   // Date range filter — two modes:
   // 'overlap': promo is active on at least one day within [dateFrom, dateTo]
   // 'bounds':  promo starts OR ends within [dateFrom, dateTo]
@@ -2217,18 +2251,16 @@ document.getElementById('m-searchInput').addEventListener('input', e => {
   }, 150);
 });
 
-document.getElementById('m-yearFilter').addEventListener('change', e => {
-  state.year = e.target.value; state.page = 1;
-  refreshDependentFilters();
-  renderTable();
-});
 document.getElementById('m-quarterFilter').addEventListener('change', e => {
   state.quarter = e.target.value; state.page = 1;
   refreshDependentFilters();
   renderTable();
 });
-document.getElementById('m-monthFilter').addEventListener('change', e => {
-  state.month = e.target.value; state.page = 1;
+document.getElementById('m-monthFilter').addEventListener('click', e => {
+  const pill = e.target.closest('.month-pill');
+  if(!pill) return;
+  state.month = pill.dataset.month;
+  state.page = 1;
   refreshDependentFilters();
   renderTable();
 });
@@ -2302,13 +2334,6 @@ document.getElementById('m-dateModeBtn').addEventListener('click', () => {
   renderTable();
 });
 
-document.getElementById('m-discSlider').addEventListener('input', e => {
-  state.minDisc = parseInt(e.target.value, 10);
-  document.getElementById('m-discSliderVal').textContent = state.minDisc + '%';
-  state.page = 1;
-  renderTable();
-});
-
 document.getElementById('m-sortToggle').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if(!btn) return;
@@ -2337,15 +2362,13 @@ document.querySelectorAll('thead th').forEach(th => {
 });
 
 document.getElementById('m-resetBtn').addEventListener('click', () => {
-  state = {search:'', year:'', quarter:'', month:'', maker:'', campaign:'', status:'', minDisc:0, codeField:'ean', dateFrom:'', dateTo:'', dateMode:'overlap', sortCol:'impactScore', sortDir:'desc', page:1, pageSize:50};
+  state = {search:'', year:'', quarter:'', month:'', maker:'', campaign:'', status:'', codeField:'ean', dateFrom:'', dateTo:'', dateMode:'overlap', sortCol:'impactScore', sortDir:'desc', page:1, pageSize:50};
   document.getElementById('m-searchInput').value = '';
   document.getElementById('m-dateFrom').value = '';
   document.getElementById('m-dateTo').value = '';
   updateDateRangeUI();
   refreshDependentFilters();
   populateStatusFilter();
-  document.getElementById('m-discSlider').value = 0;
-  document.getElementById('m-discSliderVal').textContent = '0%';
   document.getElementById('m-codeFieldSelect').value = 'ean';
   document.querySelectorAll('#m-sortToggle button').forEach(b => b.classList.remove('active'));
   document.querySelector('#m-sortToggle button[data-sort="impactScore"]').classList.add('active');
