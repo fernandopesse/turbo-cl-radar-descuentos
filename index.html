@@ -2622,48 +2622,47 @@ const WMS_LABELS = {
   no_encontrado: '✕ No encontrado en WMS',
 };
 
-// avg_weekly_gmv = GMV_28D_CATALOG/4 (últimos 28d catálogo Turbo, retailer_id=161)
-// promoImpact = avg(REAL_SALE - EXPECTED_SALE) últimas 13 semanas con promo activa
-// Fuente: RP_SILVER_DB_PROD.TURBO_SUPPLY.CL_DISCOUNTS_ROI + CL_PRODUCT_NEW_CATALOG
+// GMV semanal promedio últimas 13 semanas (CLP con IVA)
+// Fuente: RP_SILVER_DB_PROD.TURBO_CORE.CL_ORDER_DISCOUNTS, COUNT_TO_GMV=TRUE
 const GMV_DATA = {
-  '7610400068505':{ weeklyGmv:485,  promoImpact:272 },
-  '7610400068529':{ weeklyGmv:771,  promoImpact:359 },
-  '7790520014177':{ weeklyGmv:183,  promoImpact:27  },
-  '7798070860718':{ weeklyGmv:365,  promoImpact:69  },
-  '7798070860817':{ weeklyGmv:264,  promoImpact:47  },
-  '7798070860916':{ weeklyGmv:58,   promoImpact:37  },
-  '7798070861043':{ weeklyGmv:371,  promoImpact:68  },
-  '7798070861166':{ weeklyGmv:100,  promoImpact:28  },
-  '7801420001904':{ weeklyGmv:432,  promoImpact:21  },
-  '7802337910235':{ weeklyGmv:521,  promoImpact:22  },
-  '7802820048322':{ weeklyGmv:641,  promoImpact:45  },
-  '7802820452129':{ weeklyGmv:816,  promoImpact:26  },
-  '7802820500035':{ weeklyGmv:527,  promoImpact:49  },
-  '7802820645859':{ weeklyGmv:647,  promoImpact:55  },
-  '7802820678017':{ weeklyGmv:1603, promoImpact:29  },
-  '7802820678024':{ weeklyGmv:101,  promoImpact:12  },
-  '7802820678031':{ weeklyGmv:112,  promoImpact:17  },
-  '7802820678048':{ weeklyGmv:972,  promoImpact:43  },
-  '7802820678055':{ weeklyGmv:1118, promoImpact:41  },
-  '7802820678062':{ weeklyGmv:63,   promoImpact:13  },
-  '7802820700435':{ weeklyGmv:516,  promoImpact:39  },
-  '7802820700633':{ weeklyGmv:917,  promoImpact:54  },
-  '7804654890399':{ weeklyGmv:520,  promoImpact:109 },
-  '7804918450031':{ weeklyGmv:205,  promoImpact:49  },
-  '7806810003612':{ weeklyGmv:212,  promoImpact:24  },
-  '7806810004145':{ weeklyGmv:1688, promoImpact:37  },
-  '7806810005050':{ weeklyGmv:490,  promoImpact:31  },
-  '7806810007184':{ weeklyGmv:622,  promoImpact:39  },
-  '7806810007443':{ weeklyGmv:1564, promoImpact:83  },
-  '7806810017442':{ weeklyGmv:533,  promoImpact:47  },
-  '7806810024464':{ weeklyGmv:508,  promoImpact:21  },
-  '7806810800860':{ weeklyGmv:39,   promoImpact:21  },
-  '7806810800877':{ weeklyGmv:41,   promoImpact:25  },
-  '8003340807751':{ weeklyGmv:744,  promoImpact:276 },
-  '8003340807775':{ weeklyGmv:592,  promoImpact:214 },
-  '9002490100490':{ weeklyGmv:1699, promoImpact:259 },
-  '9002490200381':{ weeklyGmv:3219, promoImpact:314 },
-  '9002490232207':{ weeklyGmv:155,  promoImpact:171 },
+  '7610400068505': 356225,
+  '7610400068529': 365937,
+  '7790520014177': 25558,
+  '7798070860718': 85495,
+  '7798070860817': 77767,
+  '7798070860916': 38760,
+  '7798070861043': 68075,
+  '7798070861166': 45942,
+  '7801420001904': 31532,
+  '7802337910235': 22212,
+  '7802820048322': 77333,
+  '7802820452129': 129377,
+  '7802820500035': 84050,
+  '7802820645859': 96563,
+  '7802820678017': 260411,
+  '7802820678024': 33390,
+  '7802820678031': 46110,
+  '7802820678048': 146242,
+  '7802820678055': 146783,
+  '7802820678062': 31800,
+  '7802820700435': 78720,
+  '7802820700633': 126701,
+  '7804654890399': 157544,
+  '7804918450031': 52749,
+  '7806810003612': 27856,
+  '7806810004145': 87474,
+  '7806810005050': 45426,
+  '7806810007184': 78275,
+  '7806810007443': 179924,
+  '7806810017442': 54784,
+  '7806810024464': 29629,
+  '7806810800860': 36104,
+  '7806810800877': 37363,
+  '8003340807751': 309719,
+  '8003340807775': 202323,
+  '9002490100490': 516008,
+  '9002490200381': 910548,
+  '9002490232207': 327408,
 };
 
 const EAN_IMAGES = {
@@ -2806,7 +2805,7 @@ function renderCalendar(){
           Inicia ${fmtDate(d.startDate)} → termina ${fmtDate(d.endDate)}
         </div>
         ${cargaBreakdown(d) !== '—' ? `<div class="promo-card-carga">${escapeHtml(cargaBreakdown(d))}</div>` : ''}
-        ${(()=>{ const g = GMV_DATA[d.ean]; return g ? `<div class="promo-card-gmv"><span class="gmv-badge base">GMV/sem ~${fmtGmv(g.weeklyGmv)}</span><span class="gmv-badge impact">+${fmtGmv(g.promoImpact)} promo</span></div>` : ''; })()}
+        ${GMV_DATA[d.ean] ? `<div class="promo-card-gmv"><span class="gmv-badge base">GMV/sem ~${fmtGmv(GMV_DATA[d.ean])}</span></div>` : ''}
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -2868,15 +2867,11 @@ function openDealDetail(d, rank){
           <div class="detail-field-label">Estado en calendario</div>
           <div class="detail-field-val">${escapeHtml(statusLabel(d.status))}</div>
         </div>
-        ${(()=>{ const g = GMV_DATA[d.ean]; return g ? `
+        ${GMV_DATA[d.ean] ? `
         <div class="detail-field">
-          <div class="detail-field-label">GMV semanal histórico (3m)</div>
-          <div class="detail-field-val mono">${fmtGmv(g.weeklyGmv)} CLP</div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Impacto incremental promo</div>
-          <div class="detail-field-val mono" style="color:var(--ok);font-weight:700;">+${fmtGmv(g.promoImpact)} CLP</div>
-        </div>` : ''; })()}
+          <div class="detail-field-label">GMV semanal promedio (3m)</div>
+          <div class="detail-field-val mono">${fmtGmv(GMV_DATA[d.ean])} CLP</div>
+        </div>` : ''}
       </div>
 
       <div class="detail-section-title">Códigos de identificación</div>
