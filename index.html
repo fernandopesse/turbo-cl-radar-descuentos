@@ -447,23 +447,6 @@ select, .chip-select{
 select:focus{ border-color: var(--turbo-violet); }
 #campaignFilter{ max-width: 220px; }
 
-.disc-slider-wrap{
-  display:flex;
-  align-items:center;
-  gap: 8px;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--mute);
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 7px 12px;
-}
-.disc-slider-wrap input[type=range]{
-  width: 110px;
-  accent-color: var(--turbo-violet);
-}
-.disc-slider-wrap b{ color: var(--ink); min-width: 30px; }
 
 .code-select-wrap{
   display:flex;
@@ -1584,9 +1567,6 @@ footer{
             <option value="productId">Content Portal ID</option>
           </select>
         </div>
-        <div class="disc-slider-wrap">
-          Desc. mín. <input type="range" id="m-discSlider" min="0" max="75" value="0" step="1"> <b id="m-discSliderVal">0%</b>
-        </div>
         <div class="toggle-btns" id="m-sortToggle">
           <button data-sort="discountPct" class="active">Más llamativo</button>
           <button data-sort="endDate">Vence pronto</button>
@@ -1611,6 +1591,7 @@ footer{
               <th data-col="endDate">Fin <span class="arrow">▾</span></th>
               <th data-col="discountPct">% Desc. final <span class="arrow">▾</span></th>
               <th data-col="cargaTotalPct">Carga (maker+turbo) <span class="arrow">▾</span></th>
+              <th>GMV/sem</th>
               <th data-col="match">Match</th>
             </tr>
           </thead>
@@ -1881,6 +1862,11 @@ function fmtDate(d){
   const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
   return `${day} ${months[parseInt(m,10)-1]} ${y}`;
 }
+function fmtGmvShort(n){
+  if(!n && n !== 0) return '—';
+  if(n >= 1e6) return '$' + (n/1e6).toFixed(1) + 'M';
+  return '$' + Math.round(n/1e3) + 'k';
+}
 function discTier(v){
   if(v == null) return 'base';
   if(v >= 40) return 'fire';
@@ -2082,7 +2068,6 @@ let state = {
   maker: '',
   campaign: '',
   status: '',
-  minDisc: 0,
   codeField: 'ean',
   dateFrom: '',
   dateTo: '',
@@ -2094,9 +2079,8 @@ let state = {
 };
 
 // ---------- spotlight (top discounts) ----------
-// Reacts to year / quarter / month / maker / campaign / status filters (not free-text search or
-// min-discount slider, since the spotlight IS the discount ranking — filtering it by min discount
-// would be circular).
+// Reacts to year / quarter / month / maker / campaign / status filters (not free-text search,
+// since the spotlight IS the discount ranking).
 function spotlightFilteredRows(){
   let rows = DATA;
   if(state.year) rows = rows.filter(d => d.year === state.year);
@@ -2190,7 +2174,6 @@ function applyFilters(){
   if(state.maker) rows = rows.filter(d => d.maker === state.maker);
   if(state.campaign) rows = rows.filter(d => d.campaign === state.campaign);
   if(state.status) rows = rows.filter(d => d.status === state.status);
-  if(state.minDisc > 0) rows = rows.filter(d => d.discountPct != null && d.discountPct >= state.minDisc);
   // Date range filter — two modes:
   // 'overlap': promo is active on at least one day within [dateFrom, dateTo]
   // 'bounds':  promo starts OR ends within [dateFrom, dateTo]
@@ -2338,6 +2321,7 @@ function renderTable(){
         <td class="mono">${fmtDate(d.endDate)}</td>
         <td class="num"><span class="disc-pill t-${tier}">${d.discountPct != null ? d.discountPct.toFixed(0)+'%' : '—'}</span></td>
         <td class="num mono">${cargaBreakdown(d)}</td>
+        <td class="num mono" style="font-size:11.5px;color:var(--mute);">${fmtGmvShort(window.GMV_DATA && window.GMV_DATA[d.ean])}</td>
         <td class="num"><span class="match-flag ${m.cls}">${m.label}</span></td>
       </tr>
     `;
@@ -2473,13 +2457,6 @@ document.getElementById('m-dateModeBtn').addEventListener('click', () => {
   renderTable();
 });
 
-document.getElementById('m-discSlider').addEventListener('input', e => {
-  state.minDisc = parseInt(e.target.value, 10);
-  document.getElementById('m-discSliderVal').textContent = state.minDisc + '%';
-  state.page = 1;
-  renderTable();
-});
-
 document.getElementById('m-sortToggle').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if(!btn) return;
@@ -2508,15 +2485,13 @@ document.querySelectorAll('thead th').forEach(th => {
 });
 
 document.getElementById('m-resetBtn').addEventListener('click', () => {
-  state = {search:'', year:'', quarter:'', month:'', maker:'', campaign:'', status:'', minDisc:0, codeField:'ean', dateFrom:'', dateTo:'', dateMode:'overlap', sortCol:'discountPct', sortDir:'desc', page:1, pageSize:50};
+  state = {search:'', year:'', quarter:'', month:'', maker:'', campaign:'', status:'', codeField:'ean', dateFrom:'', dateTo:'', dateMode:'overlap', sortCol:'discountPct', sortDir:'desc', page:1, pageSize:50};
   document.getElementById('m-searchInput').value = '';
   document.getElementById('m-dateFrom').value = '';
   document.getElementById('m-dateTo').value = '';
   updateDateRangeUI();
   refreshDependentFilters();
   populateStatusFilter();
-  document.getElementById('m-discSlider').value = 0;
-  document.getElementById('m-discSliderVal').textContent = '0%';
   document.getElementById('m-codeFieldSelect').value = 'ean';
   document.querySelectorAll('#sortToggle button').forEach(b => b.classList.remove('active'));
   document.querySelector('#sortToggle button[data-sort="discountPct"]').classList.add('active');
@@ -2624,7 +2599,7 @@ const WMS_LABELS = {
 
 // GMV semanal promedio últimas 13 semanas (CLP con IVA)
 // Fuente: RP_SILVER_DB_PROD.TURBO_CORE.CL_ORDER_DISCOUNTS, COUNT_TO_GMV=TRUE
-const GMV_DATA = {
+window.GMV_DATA = {
   '7610400068505': 356225,
   '7610400068529': 365937,
   '7790520014177': 25558,
