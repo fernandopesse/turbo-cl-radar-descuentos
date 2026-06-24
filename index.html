@@ -349,6 +349,42 @@ h1 em{
   color: var(--ok);
   white-space: nowrap;
 }
+/* impact bar (table cell) */
+td.impact-cell{ padding: 0; min-width: 100px; }
+.impact-bar-wrap{ position: relative; padding: 7px 10px; }
+.impact-bar{
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: linear-gradient(90deg, rgba(31,158,100,.20), rgba(31,158,100,.05));
+  border-right: 2px solid rgba(31,158,100,.38);
+  border-radius: 0 3px 3px 0;
+  pointer-events: none;
+  transition: width .25s ease;
+}
+.impact-val{
+  position: relative;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  color: var(--ok); white-space: nowrap;
+}
+/* info tooltip on column header */
+.col-info{
+  position: relative; display: inline-block;
+  cursor: help; font-size: 10px; opacity: 0.45;
+  margin-left: 3px; line-height: 1;
+}
+.col-info:hover{ opacity: 1; }
+.col-info::after{
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 8px); right: 0;
+  background: #1a202c; color: #edf2f7;
+  padding: 8px 12px; border-radius: 8px;
+  font-size: 11px; font-weight: 400; font-family: inherit;
+  white-space: pre-line; line-height: 1.6; min-width: 230px;
+  pointer-events: none; opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 200;
+  box-shadow: 0 4px 16px rgba(0,0,0,.28);
+}
+.col-info:hover::after{ opacity: 1; }
 
 /* ============ CONTROLS ============ */
 .panel{
@@ -1362,7 +1398,7 @@ footer{
               <th data-col="discountPct">% Desc. final <span class="arrow">▾</span></th>
               <th data-col="cargaTotalPct">Carga (maker+turbo) <span class="arrow">▾</span></th>
               <th data-col="gmvXSemana">GMV/sem <span class="arrow">▾</span></th>
-              <th data-col="impactScore">⚡ Impacto <span class="arrow">▾</span></th>
+              <th data-col="impactScore">⚡ Impacto <span class="col-info" data-tip="% descuento × GMV promedio semanal del SKU&#10;(datos reales últimos 3 meses · Snowflake)&#10;&#10;La barra muestra el ranking relativo&#10;al filtro activo: barra completa = máximo&#10;impacto esperado en el set visible.">ⓘ</span> <span class="arrow">▾</span></th>
               <th data-col="match">Match</th>
             </tr>
           </thead>
@@ -2106,6 +2142,7 @@ function renderTable(){
   if(state.page > totalPages) state.page = totalPages;
   const startIdx = (state.page - 1) * state.pageSize;
   const pageRows = rows.slice(startIdx, startIdx + state.pageSize);
+  const maxImpact = rows.reduce((m, r) => Math.max(m, r.impactScore ?? 0), 0);
 
   document.getElementById('m-resultCount').textContent = total.toLocaleString('es-CL');
   document.getElementById('m-resultHint').textContent = total > 0
@@ -2142,7 +2179,7 @@ function renderTable(){
         <td class="num"><span class="disc-pill t-${tier}">${d.discountPct != null ? d.discountPct.toFixed(0)+'%' : '—'}</span></td>
         <td class="num mono">${cargaBreakdown(d)}</td>
         <td class="num mono">${fmtGMV(d.gmvXSemana) || '<span style="color:var(--mute)">—</span>'}</td>
-        <td class="num mono">${d.impactScore != null ? '<span class="impact-pill">⚡ ' + fmtGMV(d.impactScore) + '</span>' : '<span style="color:var(--mute)">—</span>'}</td>
+        <td class="impact-cell">${(()=>{ const pct = (maxImpact > 0 && d.impactScore != null) ? (d.impactScore/maxImpact*100).toFixed(1) : 0; return d.impactScore != null ? `<div class="impact-bar-wrap"><div class="impact-bar" style="width:${pct}%"></div><span class="impact-val">⚡ ${fmtGMV(d.impactScore)}</span></div>` : `<div style="padding:7px 10px;color:var(--mute)">—</div>`; })()}</td>
         <td class="num"><span class="match-flag ${m.cls}">${m.label}</span></td>
       </tr>
     `;
