@@ -2547,7 +2547,7 @@ async function loadAndRender(isManualRefresh){
 
   try{
     const { records, warnings } = await loadLiveData();
-    DATA = records.map(enrichRecord);
+    DATA = records.map(enrichRecord).filter(d => !d.startDate || d.startDate >= '2026-06-01');
 
     if(isFirstLoad){
       initApp();
