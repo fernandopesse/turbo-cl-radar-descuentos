@@ -372,19 +372,6 @@ td.impact-cell{ padding: 0; min-width: 100px; }
   margin-left: 3px; line-height: 1;
 }
 .col-info:hover{ opacity: 1; }
-.col-info::after{
-  content: attr(data-tip);
-  position: absolute; bottom: calc(100% + 8px); right: 0;
-  background: #1a202c; color: #edf2f7;
-  padding: 8px 12px; border-radius: 8px;
-  font-size: 11px; font-weight: 400; font-family: inherit;
-  white-space: pre-line; line-height: 1.6; min-width: 230px;
-  pointer-events: none; opacity: 0;
-  transition: opacity 0.15s;
-  z-index: 200;
-  box-shadow: 0 4px 16px rgba(0,0,0,.28);
-}
-.col-info:hover::after{ opacity: 1; }
 
 /* ============ CONTROLS ============ */
 .panel{
@@ -2448,6 +2435,46 @@ async function loadAndRender(isManualRefresh){
 document.getElementById('m-refreshBtn').addEventListener('click', () => loadAndRender(true));
 
 loadAndRender(false);
+
+// Tooltip para .col-info — usa position:fixed para no quedar recortado por overflow de tabla
+(function(){
+  const tip = document.createElement('div');
+  Object.assign(tip.style, {
+    position:'fixed', zIndex:'9999',
+    background:'#1a202c', color:'#edf2f7',
+    padding:'8px 12px', borderRadius:'8px',
+    fontSize:'11px', lineHeight:'1.6', maxWidth:'260px',
+    whiteSpace:'pre-line', fontFamily:'inherit',
+    boxShadow:'0 4px 16px rgba(0,0,0,.28)',
+    pointerEvents:'none', display:'none',
+  });
+  document.body.appendChild(tip);
+
+  function reposition(e){
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    let left = e.clientX - tw / 2;
+    let top  = e.clientY - th - 14;
+    if(left < 8) left = 8;
+    if(left + tw > vw - 8) left = vw - tw - 8;
+    if(top < 8) top = e.clientY + 20;
+    tip.style.left = left + 'px';
+    tip.style.top  = top  + 'px';
+  }
+
+  document.addEventListener('mouseover', e => {
+    const el = e.target.closest('.col-info');
+    if(!el || !el.dataset.tip) return;
+    tip.textContent = el.dataset.tip;
+    tip.style.display = 'block';
+  });
+  document.addEventListener('mousemove', e => {
+    if(tip.style.display !== 'none') reposition(e);
+  });
+  document.addEventListener('mouseout', e => {
+    if(e.target.closest('.col-info')) tip.style.display = 'none';
+  });
+})();
 
 })();</script>
 <script>(function(){
