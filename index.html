@@ -1811,6 +1811,11 @@ async function loadLiveData(){
   const allRows = payload.records || [];
   const warnings = payload.errors || [];
 
+  // If Code.gs returns imageMap from the ImagesDash sheet, store it globally
+  if(payload.imageMap && typeof payload.imageMap === 'object'){
+    window.SHEET_IMAGE_MAP = payload.imageMap;
+  }
+
   if(allRows.length === 0 && warnings.length === 0){
     warnings.push('La hoja respondió correctamente pero no trajo ninguna fila con campaña.');
   }
@@ -7204,7 +7209,7 @@ function renderCalendar(){
   container.innerHTML = `<div class="promo-week-grid">${deals.map((d, i) => {
     const idx = calendarDeals.length;
     calendarDeals.push({deal: d, rank: i + 1});
-    const imgUrl = EAN_IMAGES[d.productId] || null;
+    const imgUrl = (window.SHEET_IMAGE_MAP && window.SHEET_IMAGE_MAP[String(d.productId)]) || EAN_IMAGES[d.productId] || null;
     return `<div class="promo-card" data-idx="${idx}" tabindex="0" role="button" aria-label="Ver detalle de ${escapeHtml(d.productName)}">
       ${imgUrl
         ? `<img class="promo-card-img" src="${escapeHtml(imgUrl)}" alt="" loading="lazy">`
