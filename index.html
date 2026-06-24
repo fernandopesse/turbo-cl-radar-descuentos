@@ -327,6 +327,28 @@ h1 em{
   border-top: 1px dashed var(--line);
   font-weight: 600;
 }
+.gmv-badge{
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--mute);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line-soft);
+}
+.gmv-badge b{ color: var(--ok); }
+.impact-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--ok-bg);
+  color: var(--ok);
+  white-space: nowrap;
+}
 
 /* ============ CONTROLS ============ */
 .panel{
@@ -1315,7 +1337,8 @@ footer{
           Desc. mín. <input type="range" id="m-discSlider" min="0" max="75" value="0" step="1"> <b id="m-discSliderVal">0%</b>
         </div>
         <div class="toggle-btns" id="m-sortToggle">
-          <button data-sort="discountPct" class="active">Más llamativo</button>
+          <button data-sort="impactScore" class="active">⚡ Mayor impacto</button>
+          <button data-sort="discountPct">Más llamativo</button>
           <button data-sort="endDate">Vence pronto</button>
           <button data-sort="campaign">A–Z campaña</button>
         </div>
@@ -1338,6 +1361,8 @@ footer{
               <th data-col="endDate">Fin <span class="arrow">▾</span></th>
               <th data-col="discountPct">% Desc. final <span class="arrow">▾</span></th>
               <th data-col="cargaTotalPct">Carga (maker+turbo) <span class="arrow">▾</span></th>
+              <th data-col="gmvXSemana">GMV/sem <span class="arrow">▾</span></th>
+              <th data-col="impactScore">⚡ Impacto <span class="arrow">▾</span></th>
               <th data-col="match">Match</th>
             </tr>
           </thead>
@@ -1586,6 +1611,23 @@ async function loadLiveData(){
 //                     startDate, endDate, discountPct, cargaMakerPct, cargaTurboPct, status}
 // Derived in enrichRecord(): month (YYYY-MM), quarter (Q1-Q4), year (YYYY), cargaTotalPct
 let DATA = [];
+let SALES_DATA = {};
+
+function fmtGMV(v){
+  if(v == null) return null;
+  if(v >= 1e9) return '$' + (v/1e9).toFixed(1) + 'B';
+  if(v >= 1e6) return '$' + (v/1e6).toFixed(1) + 'M';
+  if(v >= 1e3) return '$' + Math.round(v/1e3) + 'K';
+  return '$' + Math.round(v);
+}
+
+async function loadSalesData(){
+  try{
+    const resp = await fetch('sales_data.json?_=' + Date.now());
+    if(!resp.ok) return;
+    SALES_DATA = await resp.json();
+  } catch(e){ /* sin datos de venta — impactScore no se mostrará */ }
+}
 
 const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 function monthLabel(ym){
@@ -1606,6 +1648,9 @@ function enrichRecord(o){
   }
   const hasAnyCarga = o.cargaMakerPct != null || (o.cargaTurboPct != null && o.cargaTurboPct !== 0);
   o.cargaTotalPct = hasAnyCarga ? (o.cargaMakerPct || 0) + (o.cargaTurboPct || 0) : null;
+  const skuData = SALES_DATA.skus && o.ean ? SALES_DATA.skus[String(o.ean)] : null;
+  o.gmvXSemana = skuData ? skuData.gmv_x_semana : null;
+  o.impactScore = (o.discountPct != null && skuData) ? (o.discountPct * skuData.gmv_x_semana / 100) : null;
   return o;
 }
 
@@ -1822,7 +1867,7 @@ let state = {
   dateFrom: '',
   dateTo: '',
   dateMode: 'overlap', // 'overlap' = vigente en algún momento del rango | 'bounds' = empieza O termina dentro del rango
-  sortCol: 'discountPct',
+  sortCol: 'impactScore',
   sortDir: 'desc',
   page: 1,
   pageSize: 50,
@@ -1868,13 +1913,26 @@ function spotlightLabel(){
 let spotlightTopRows = []; // keeps the currently rendered top-12 rows so card clicks can look up full detail
 
 function renderSpotlight(){
+  const hasSalesData = SALES_DATA.skus && Object.keys(SALES_DATA.skus).length > 0;
   const filtered = spotlightFilteredRows().filter(d => d.discountPct != null && d.productName);
-  const top = [...filtered].sort((a,b) => b.discountPct - a.discountPct).slice(0, 12);
+  const top = [...filtered].sort((a,b) => {
+    if(hasSalesData){
+      const ai = a.impactScore ?? -Infinity;
+      const bi = b.impactScore ?? -Infinity;
+      if(bi !== ai) return bi - ai;
+      return (b.discountPct ?? 0) - (a.discountPct ?? 0);
+    }
+    return b.discountPct - a.discountPct;
+  }).slice(0, 12);
   spotlightTopRows = top;
 
-  document.getElementById('m-spotlightTitle').textContent = `🔥 Top descuentos ${spotlightLabel()}`;
+  document.getElementById('m-spotlightTitle').textContent = hasSalesData
+    ? `⚡ Top promos por impacto ${spotlightLabel()}`
+    : `🔥 Top descuentos ${spotlightLabel()}`;
   document.getElementById('m-spotlightNote').textContent = top.length
-    ? `Las ${top.length} promos con mayor % de descuento final activo${filtered.length ? ` (de ${filtered.length.toLocaleString('es-CL')} con descuento en este filtro)` : ''} · clic en una tarjeta para ver el detalle`
+    ? hasSalesData
+      ? `Las ${top.length} promos de mayor impacto esperado (descuento × GMV histórico)${filtered.length ? ` · de ${filtered.length.toLocaleString('es-CL')} promos en este filtro` : ''} · clic para ver detalle`
+      : `Las ${top.length} promos con mayor % de descuento final activo${filtered.length ? ` (de ${filtered.length.toLocaleString('es-CL')} con descuento en este filtro)` : ''} · clic en una tarjeta para ver el detalle`
     : 'No hay promos con descuento para este filtro';
 
   const container = document.getElementById('m-spotlight');
@@ -1886,6 +1944,7 @@ function renderSpotlight(){
 
   container.innerHTML = top.map((d, i) => {
     const tier = discTier(d.discountPct);
+    const gmv = fmtGMV(d.gmvXSemana);
     return `
     <div class="spot-card" data-spot-idx="${i}" tabindex="0" role="button" aria-label="Ver detalle de ${escapeHtml(d.productName)}">
       <div class="spot-rank">#${i+1}</div>
@@ -1894,6 +1953,7 @@ function renderSpotlight(){
       <div class="spot-name">${escapeHtml(d.productName)}</div>
       <div class="spot-maker">${escapeHtml(d.maker || 'Maker no especificado')}</div>
       <div class="spot-campaign">${escapeHtml(d.campaign)}</div>
+      ${gmv ? `<div class="gmv-badge">GMV/sem <b>${gmv}</b></div>` : ''}
     </div>
   `;
   }).join('');
@@ -1945,7 +2005,15 @@ function applyFilters(){
 
   rows = [...rows].sort((a,b) => {
     let av = a[state.sortCol], bv = b[state.sortCol];
-    if(state.sortCol === 'discountPct' || state.sortCol === 'cargaTotalPct'){
+    if(state.sortCol === 'impactScore'){
+      // SKUs sin datos de venta van al final; entre ellos, desempata por discountPct
+      if(av == null && bv == null){ av = a.discountPct ?? -1; bv = b.discountPct ?? -1; }
+      else { av = av ?? -Infinity; bv = bv ?? -Infinity; }
+      if(av < bv) return state.sortDir === 'asc' ? -1 : 1;
+      if(av > bv) return state.sortDir === 'asc' ? 1 : -1;
+      return 0;
+    }
+    if(state.sortCol === 'discountPct' || state.sortCol === 'cargaTotalPct' || state.sortCol === 'gmvXSemana'){
       av = av == null ? -1 : av; bv = bv == null ? -1 : bv;
     }
     if(av == null) av = '';
@@ -2073,6 +2141,8 @@ function renderTable(){
         <td class="mono">${fmtDate(d.endDate)}</td>
         <td class="num"><span class="disc-pill t-${tier}">${d.discountPct != null ? d.discountPct.toFixed(0)+'%' : '—'}</span></td>
         <td class="num mono">${cargaBreakdown(d)}</td>
+        <td class="num mono">${fmtGMV(d.gmvXSemana) || '<span style="color:var(--mute)">—</span>'}</td>
+        <td class="num mono">${d.impactScore != null ? '<span class="impact-pill">⚡ ' + fmtGMV(d.impactScore) + '</span>' : '<span style="color:var(--mute)">—</span>'}</td>
         <td class="num"><span class="match-flag ${m.cls}">${m.label}</span></td>
       </tr>
     `;
@@ -2218,7 +2288,7 @@ document.getElementById('m-discSlider').addEventListener('input', e => {
 document.getElementById('m-sortToggle').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if(!btn) return;
-  document.querySelectorAll('#sortToggle button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#m-sortToggle button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   state.sortCol = btn.dataset.sort;
   state.sortDir = btn.dataset.sort === 'endDate' ? 'asc' : (btn.dataset.sort === 'campaign' ? 'asc' : 'desc');
@@ -2236,14 +2306,14 @@ document.querySelectorAll('thead th').forEach(th => {
       state.sortCol = col;
       state.sortDir = (col === 'endDate' || col === 'campaign' || col === 'maker' || col === 'productName' || col === 'status') ? 'asc' : 'desc';
     }
-    document.querySelectorAll('#sortToggle button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#m-sortToggle button').forEach(b => b.classList.remove('active'));
     state.page = 1;
     renderTable();
   });
 });
 
 document.getElementById('m-resetBtn').addEventListener('click', () => {
-  state = {search:'', year:'', quarter:'', month:'', maker:'', campaign:'', status:'', minDisc:0, codeField:'ean', dateFrom:'', dateTo:'', dateMode:'overlap', sortCol:'discountPct', sortDir:'desc', page:1, pageSize:50};
+  state = {search:'', year:'', quarter:'', month:'', maker:'', campaign:'', status:'', minDisc:0, codeField:'ean', dateFrom:'', dateTo:'', dateMode:'overlap', sortCol:'impactScore', sortDir:'desc', page:1, pageSize:50};
   document.getElementById('m-searchInput').value = '';
   document.getElementById('m-dateFrom').value = '';
   document.getElementById('m-dateTo').value = '';
@@ -2253,8 +2323,8 @@ document.getElementById('m-resetBtn').addEventListener('click', () => {
   document.getElementById('m-discSlider').value = 0;
   document.getElementById('m-discSliderVal').textContent = '0%';
   document.getElementById('m-codeFieldSelect').value = 'ean';
-  document.querySelectorAll('#sortToggle button').forEach(b => b.classList.remove('active'));
-  document.querySelector('#sortToggle button[data-sort="discountPct"]').classList.add('active');
+  document.querySelectorAll('#m-sortToggle button').forEach(b => b.classList.remove('active'));
+  document.querySelector('#m-sortToggle button[data-sort="impactScore"]').classList.add('active');
   renderTable();
 });
 
@@ -2303,7 +2373,10 @@ async function loadAndRender(isManualRefresh){
   if(refreshBtn) refreshBtn.disabled = true;
 
   try{
-    const { records, warnings } = await loadLiveData();
+    const [{ records, warnings }] = await Promise.all([
+      loadLiveData(),
+      loadSalesData(),
+    ]);
     DATA = records.map(enrichRecord);
 
     if(isFirstLoad){
@@ -2320,7 +2393,8 @@ async function loadAndRender(isManualRefresh){
     const ts = new Date();
     const stamp = ts.toLocaleString('es-CL', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
     const lbl = document.getElementById('m-lastUpdatedLabel');
-    if(lbl) lbl.textContent = `Actualizado: ${stamp}`;
+    const salesNote = SALES_DATA.generated_at ? ` · ventas al ${SALES_DATA.generated_at}` : '';
+    if(lbl) lbl.textContent = `Actualizado: ${stamp}${salesNote}`;
 
     if(warnings.length){
       showLoadError(warnings.join(' '));
