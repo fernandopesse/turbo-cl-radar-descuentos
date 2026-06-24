@@ -1833,7 +1833,7 @@ async function loadLiveData(){
 // Derived in enrichRecord(): month (YYYY-MM), quarter (Q1-Q4), year (YYYY), cargaTotalPct
 let DATA = [];
 
-const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function monthLabel(ym){
   const [y,m] = ym.split('-');
   return `${MONTH_NAMES[parseInt(m,10)-1]} ${y}`;
@@ -2176,17 +2176,17 @@ function applyFilters(){
   if(state.status) rows = rows.filter(d => d.status === state.status);
   // Date range filter — two modes:
   // 'overlap': promo is active on at least one day within [dateFrom, dateTo]
-  // 'bounds':  promo starts OR ends within [dateFrom, dateTo]
+  // 'bounds':  promo startDate falls within [dateFrom, dateTo]
   if(state.dateFrom || state.dateTo) {
     if(state.dateMode === 'overlap') {
       if(state.dateFrom) rows = rows.filter(d => d.endDate && d.endDate >= state.dateFrom);
       if(state.dateTo)   rows = rows.filter(d => d.startDate && d.startDate <= state.dateTo);
     } else {
-      // bounds: startDate OR endDate falls within the range
+      // bounds: only promos that START within the range
       rows = rows.filter(d => {
-        const startIn = d.startDate && (!state.dateFrom || d.startDate >= state.dateFrom) && (!state.dateTo || d.startDate <= state.dateTo);
-        const endIn   = d.endDate   && (!state.dateFrom || d.endDate   >= state.dateFrom) && (!state.dateTo || d.endDate   <= state.dateTo);
-        return startIn || endIn;
+        return d.startDate
+          && (!state.dateFrom || d.startDate >= state.dateFrom)
+          && (!state.dateTo   || d.startDate <= state.dateTo);
       });
     }
   }
@@ -2409,14 +2409,17 @@ function updateDateRangeUI(){
   const wrap = document.getElementById('m-dateFrom').closest('.date-range-wrap');
   const clearBtn = document.getElementById('m-dateClearBtn');
   const modeBtn = document.getElementById('m-dateModeBtn');
+  const label = wrap.querySelector('.date-range-label');
   const hasDate = state.dateFrom || state.dateTo;
   wrap.classList.toggle('active', !!hasDate);
   clearBtn.classList.toggle('visible', !!hasDate);
+  const isOverlap = state.dateMode === 'overlap';
+  if(label) label.textContent = isOverlap ? 'Vigente entre:' : 'Inicia entre:';
   if(modeBtn){
-    modeBtn.textContent = state.dateMode === 'overlap' ? 'Vigente' : 'Inicia/termina';
-    modeBtn.title = state.dateMode === 'overlap'
-      ? 'Modo actual: muestra todo lo vigente en el rango. Clic para cambiar a "empieza o termina en el rango".'
-      : 'Modo actual: muestra solo lo que empieza o termina en el rango. Clic para cambiar a "vigente en el rango".';
+    modeBtn.textContent = isOverlap ? 'Vigente' : 'Inicia';
+    modeBtn.title = isOverlap
+      ? 'Modo actual: vigente en el rango (la promo se superpone con el período). Clic para cambiar a "inicia en el rango".'
+      : 'Modo actual: inicia en el rango (filtra por fecha de inicio). Clic para cambiar a "vigente en el rango".';
   }
 }
 
