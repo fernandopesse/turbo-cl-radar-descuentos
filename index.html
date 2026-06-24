@@ -2034,7 +2034,7 @@ let spotlightTopRows = []; // keeps the currently rendered top-12 rows so card c
 function renderSpotlight(){
   const hasSalesData = SALES_DATA.skus && Object.keys(SALES_DATA.skus).length > 0;
   const filtered = spotlightFilteredRows().filter(d => d.discountPct != null && d.productName);
-  const top = [...filtered].sort((a,b) => {
+  const sorted = [...filtered].sort((a,b) => {
     if(hasSalesData){
       const ai = a.impactScore ?? -Infinity;
       const bi = b.impactScore ?? -Infinity;
@@ -2042,7 +2042,13 @@ function renderSpotlight(){
       return (b.discountPct ?? 0) - (a.discountPct ?? 0);
     }
     return b.discountPct - a.discountPct;
-  }).slice(0, 12);
+  });
+  const _seen = new Set();
+  const top = [];
+  for(const d of sorted){
+    const _k = (d.ean||d.productName||'')+'|'+(d.campaign||'')+'|'+(d.discountPct??'');
+    if(!_seen.has(_k)){ _seen.add(_k); top.push(d); if(top.length===12) break; }
+  }
   spotlightTopRows = top;
 
   document.getElementById('m-spotlightTitle').textContent = hasSalesData
