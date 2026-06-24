@@ -1259,6 +1259,19 @@ h1{
 .cal-modal-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);margin-bottom:3px;}
 .cal-modal-val{font-size:14px;font-weight:600;color:var(--text);font-family:var(--mono);}
 .cal-modal-note{font-size:11px;color:var(--mute);margin-top:8px;}
+.cal-modal-sect{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:14px 0 6px;}
+.cal-prods-wrap{overflow-x:auto;margin:0 -2px;}
+.cal-prods-tbl{width:100%;border-collapse:collapse;font-size:11.5px;}
+.cal-prods-tbl th{padding:5px 6px;text-align:left;color:var(--mute);font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);white-space:nowrap;}
+.cal-prods-tbl td{padding:5px 6px;border-bottom:1px solid var(--border);}
+.cal-prods-tbl tr:last-child td{border-bottom:none;}
+.cal-pd-name{font-size:11px;color:var(--text);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cal-pd-num{font-family:var(--mono);font-size:11px;text-align:right;white-space:nowrap;}
+.cal-pd-st{font-size:9.5px;font-weight:700;padding:2px 5px;border-radius:3px;white-space:nowrap;}
+.cal-pd-st.st-ok{background:rgba(34,139,34,.15);color:#2a7a2a;}
+.cal-pd-st.st-no{background:rgba(210,43,43,.12);color:#b52626;}
+.cal-pd-st.st-mid{background:rgba(200,115,0,.12);color:#b35200;}
+.cal-no-prods{font-size:12px;color:var(--mute);margin-top:10px;padding:10px 12px;background:var(--bg);border-radius:8px;}
 
 footer{
   text-align:center;
@@ -2559,6 +2572,7 @@ async function loadAndRender(isManualRefresh){
       loadSalesData(),
     ]);
     DATA = records.map(enrichRecord);
+    window._T1DATA = DATA;
 
     if(isFirstLoad){
       initApp();
@@ -3113,12 +3127,14 @@ function renderCalendar(){
   const {year,month,q}=calState;
   document.getElementById('c-month-lbl').textContent=MONTH_NAMES_LONG[month-1]+' '+year;
 
-  const camps=calActiveCamps(year,month,q);
+  const allCamps=calActiveCamps(year,month,q);
+  /* top 12 by GMV desc, then GOs desc */
+  const camps=[...allCamps].sort((a,b)=>b.gmv!==a.gmv?b.gmv-a.gmv:b.gos-a.gos).slice(0,12);
   const withLane=assignLanes(camps);
 
-  const withGMV=camps.filter(c=>c.gmv>0).length;
-  const totGMV=camps.reduce((s,c)=>s+c.gmv,0);
-  const totOrd=camps.reduce((s,c)=>s+c.orders,0);
+  const withGMV=allCamps.filter(c=>c.gmv>0).length;
+  const totGMV=allCamps.reduce((s,c)=>s+c.gmv,0);
+  const totOrd=allCamps.reduce((s,c)=>s+c.orders,0);
   document.getElementById('c-statsBar').innerHTML=
     '<div class="cal-stat"><span class="cal-stat-val">'+camps.length+'</span><span class="cal-stat-lbl">Campañas</span></div>'+
     '<div class="cal-stat"><span class="cal-stat-val">'+withGMV+'</span><span class="cal-stat-lbl">Con GMV</span></div>'+
@@ -3189,14 +3205,59 @@ function renderCalendar(){
   });
 }
 
+function normCamp(s){return(s||'').toLowerCase().replace(/\s+/g,' ').trim();}
+
 function openCalDetail(camp){
   const color=campColor(camp.name);
   const hg=camp.gmv>0;
+
+  /* cross-reference Tab 1 data for products */
+  let prodsHtml='';
+  const t1=window._T1DATA;
+  if(t1&&t1.length){
+    const cn=normCamp(camp.name);
+    const prods=t1.filter(function(d){return normCamp(d.campaign)===cn;});
+    if(prods.length){
+      /* deduplicate by productName + discountPct + startDate */
+      const seen=new Set();
+      const uniq=prods.filter(function(p){
+        const k=(p.productName||p.ean||'')+'|'+(p.discountPct??'')+'|'+(p.startDate||'');
+        if(seen.has(k))return false;
+        seen.add(k);
+        return true;
+      });
+      uniq.sort(function(a,b){return(a.startDate||'').localeCompare(b.startDate||'');});
+      const rows=uniq.map(function(p){
+        const dc=p.discountPct!=null?p.discountPct+'%':'—';
+        const mk=p.cargaMakerPct!=null?p.cargaMakerPct+'%':'—';
+        const rp=p.cargaTurboPct!=null?p.cargaTurboPct+'%':'—';
+        const st=p.status||'—';
+        const sc=st==='CARGADO'?'st-ok':st==='NO CARGADO'?'st-no':'st-mid';
+        const per=p.startDate?('<span style="font-size:10px;color:var(--mute)">'+fmtD(p.startDate)+'</span> '):'';
+        return '<tr>'
+          +'<td class="cal-pd-name">'+per+escH(p.productName||p.ean||'—')+'</td>'
+          +'<td class="cal-pd-num">'+dc+'</td>'
+          +'<td class="cal-pd-num">'+mk+'</td>'
+          +'<td class="cal-pd-num">'+rp+'</td>'
+          +'<td><span class="cal-pd-st '+sc+'">'+escH(st)+'</span></td>'
+          +'</tr>';
+      }).join('');
+      prodsHtml='<div class="cal-modal-sect">Productos ('+uniq.length+')</div>'
+        +'<div class="cal-prods-wrap"><table class="cal-prods-tbl">'
+        +'<thead><tr><th>Producto</th><th>Dcto</th><th>Maker</th><th>Rappi</th><th>Estado</th></tr></thead>'
+        +'<tbody>'+rows+'</tbody></table></div>';
+    }else{
+      prodsHtml='<div class="cal-no-prods">Sin productos encontrados en Planificado para esta campaña.</div>';
+    }
+  }else{
+    prodsHtml='<div class="cal-no-prods">Cargá la pestaña <strong>Planificado</strong> para ver los productos asociados.</div>';
+  }
+
   document.getElementById('c-detail-body').innerHTML=
     '<div class="cal-modal-head" style="background:'+color+'">'
     +'<button class="cal-modal-close" id="c-det-close">✕</button>'
     +'<div class="cal-modal-name">'+escH(calTtl(camp.name))+'</div>'
-    +'<div class="cal-modal-dates">'+fmtD(camp.start)+' → '+fmtD(camp.end)+'</div>'
+    +'<div class="cal-modal-dates">'+fmtD(camp.start)+' &rarr; '+fmtD(camp.end)+'</div>'
     +'</div>'
     +'<div class="cal-modal-body">'
     +'<div class="cal-modal-grid">'
@@ -3206,6 +3267,7 @@ function openCalDetail(camp){
     +'<div class="cal-modal-field"><div class="cal-modal-label">Burn Maker</div><div class="cal-modal-val">'+(hg&&camp.burnMaker>0?'$'+camp.burnMaker.toFixed(3)+' MM':'—')+'</div></div>'
     +'</div>'
     +(hg?'<div class="cal-modal-note">Fuente: Snowflake INTEGRATION_PAYMENTS_EXECUTION_LOG</div>':'')
+    +prodsHtml
     +'</div>';
   document.getElementById('c-det-close').addEventListener('click',closeCalDetail);
   const ov=document.getElementById('c-detail-overlay');
