@@ -2045,14 +2045,14 @@ function renderSpotlight(){
   });
   const _groups = new Map();
   for(const d of sorted){
-    const _k = (d.ean||d.productName||'')+'|'+(d.campaign||'')+'|'+(d.discountPct??'');
+    const _k = (d.productName||'')+'|'+(d.maker||'')+'|'+(d.campaign||'')+'|'+(d.discountPct??'');
     if(!_groups.has(_k)) _groups.set(_k, []);
     _groups.get(_k).push(d);
   }
   const _seen = new Set();
   const top = [];
   for(const d of sorted){
-    const _k = (d.ean||d.productName||'')+'|'+(d.campaign||'')+'|'+(d.discountPct??'');
+    const _k = (d.productName||'')+'|'+(d.maker||'')+'|'+(d.campaign||'')+'|'+(d.discountPct??'');
     if(!_seen.has(_k)){
       _seen.add(_k);
       const _grp = _groups.get(_k);
@@ -2171,12 +2171,15 @@ function openSpotDetail(d){
   if(!d) return;
   const siblings = (d._siblings && d._siblings.length > 1) ? d._siblings : [d];
 
+  const _uEANs = [...new Set(siblings.map(s=>s.ean).filter(Boolean))];
+  const _uSyncs = [...new Set(siblings.map(s=>s.sync).filter(Boolean))];
+  const _uIds = [...new Set(siblings.map(s=>s.productId).filter(Boolean))];
   const codesHtml = `
     <div class="detail-section-title">Códigos de identificación</div>
     <div class="detail-codes">
-      <div class="detail-code-box"><div class="detail-code-label">EAN</div><div class="detail-code-val">${escapeHtml(d.ean||'—')}</div></div>
-      <div class="detail-code-box"><div class="detail-code-label">Sync</div><div class="detail-code-val">${escapeHtml(d.sync||'—')}</div></div>
-      <div class="detail-code-box"><div class="detail-code-label">Content Portal ID</div><div class="detail-code-val">${escapeHtml(d.productId||'—')}</div></div>
+      <div class="detail-code-box"><div class="detail-code-label">EAN${_uEANs.length>1?` (${_uEANs.length})`:''}</div><div class="detail-code-val" style="font-size:${_uEANs.length>1?'11px':'13px'}">${_uEANs.join(', ')||'—'}</div></div>
+      <div class="detail-code-box"><div class="detail-code-label">Sync${_uSyncs.length>1?` (${_uSyncs.length})`:''}</div><div class="detail-code-val" style="font-size:${_uSyncs.length>1?'11px':'13px'}">${_uSyncs.join(', ')||'—'}</div></div>
+      <div class="detail-code-box"><div class="detail-code-label">Content Portal ID</div><div class="detail-code-val" style="font-size:${_uIds.length>1?'11px':'13px'}">${_uIds.join(', ')||'—'}</div></div>
     </div>`;
 
   let bodyHtml;
