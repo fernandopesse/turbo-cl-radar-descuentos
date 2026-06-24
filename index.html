@@ -2043,11 +2043,24 @@ function renderSpotlight(){
     }
     return b.discountPct - a.discountPct;
   });
+  const _groups = new Map();
+  for(const d of sorted){
+    const _k = (d.ean||d.productName||'')+'|'+(d.campaign||'')+'|'+(d.discountPct??'');
+    if(!_groups.has(_k)) _groups.set(_k, []);
+    _groups.get(_k).push(d);
+  }
   const _seen = new Set();
   const top = [];
   for(const d of sorted){
     const _k = (d.ean||d.productName||'')+'|'+(d.campaign||'')+'|'+(d.discountPct??'');
-    if(!_seen.has(_k)){ _seen.add(_k); top.push(d); if(top.length===12) break; }
+    if(!_seen.has(_k)){
+      _seen.add(_k);
+      const _grp = _groups.get(_k);
+      _grp.sort((a,b)=>(a.startDate||'').localeCompare(b.startDate||''));
+      d._siblings = _grp;
+      top.push(d);
+      if(top.length===12) break;
+    }
   }
   spotlightTopRows = top;
 
@@ -2070,6 +2083,7 @@ function renderSpotlight(){
   container.innerHTML = top.map((d, i) => {
     const tier = discTier(d.discountPct);
     const gmv = fmtGMV(d.gmvXSemana);
+    const nP = d._siblings ? d._siblings.length : 1;
     return `
     <div class="spot-card" data-spot-idx="${i}" tabindex="0" role="button" aria-label="Ver detalle de ${escapeHtml(d.productName)}">
       <div class="spot-rank">#${i+1}</div>
@@ -2077,7 +2091,7 @@ function renderSpotlight(){
       <span class="spot-tag ${tier === 'fire' ? 'fire':'star'}">${tier === 'fire' ? '🔥 MUY ALTO' : '⭐ DESTACADO'}</span>
       <div class="spot-name">${escapeHtml(d.productName)}</div>
       <div class="spot-maker">${escapeHtml(d.maker || 'Maker no especificado')}</div>
-      <div class="spot-campaign">${escapeHtml(d.campaign)}</div>
+      <div class="spot-campaign">${escapeHtml(d.campaign)}${nP>1?` <span style="opacity:.55;font-size:11px;font-weight:600">×${nP}</span>`:''}</div>
       ${gmv ? `<div class="gmv-badge">GMV/sem <b>${gmv}</b></div>` : ''}
     </div>
   `;
@@ -2155,51 +2169,62 @@ function applyFilters(){
 // ---------- spotlight detail modal ----------
 function openSpotDetail(d){
   if(!d) return;
-  const tier = discTier(d.discountPct);
-  const m = matchInfo(d);
+  const siblings = (d._siblings && d._siblings.length > 1) ? d._siblings : [d];
+
+  const codesHtml = `
+    <div class="detail-section-title">Códigos de identificación</div>
+    <div class="detail-codes">
+      <div class="detail-code-box"><div class="detail-code-label">EAN</div><div class="detail-code-val">${escapeHtml(d.ean||'—')}</div></div>
+      <div class="detail-code-box"><div class="detail-code-label">Sync</div><div class="detail-code-val">${escapeHtml(d.sync||'—')}</div></div>
+      <div class="detail-code-box"><div class="detail-code-label">Content Portal ID</div><div class="detail-code-val">${escapeHtml(d.productId||'—')}</div></div>
+    </div>`;
+
+  let bodyHtml;
+  if(siblings.length === 1){
+    const m = matchInfo(d);
+    bodyHtml = `
+      <div class="detail-grid">
+        <div class="detail-field"><div class="detail-field-label">Estado de carga</div><div class="detail-field-val"><span class="status-badge ${statusClass(d.status)}">${escapeHtml(statusLabel(d.status))}</span></div></div>
+        <div class="detail-field"><div class="detail-field-label">Match desc. vs. carga</div><div class="detail-field-val"><span class="match-flag ${m.cls}">${m.label}</span></div></div>
+        <div class="detail-field"><div class="detail-field-label">Vigencia</div><div class="detail-field-val mono">${fmtDate(d.startDate)} → ${fmtDate(d.endDate)}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Carga (maker + turbo)</div><div class="detail-field-val mono">${cargaBreakdown(d)}</div></div>
+      </div>
+      ${codesHtml}`;
+  } else {
+    const thSt = 'text-align:left;padding:6px 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);border-bottom:1.5px solid var(--border)';
+    const tdSt = 'padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:middle';
+    const rows = siblings.map(s => {
+      const m = matchInfo(s);
+      return `<tr>
+        <td style="${tdSt}" class="mono" nowrap>${fmtDate(s.startDate)} → ${fmtDate(s.endDate)}</td>
+        <td style="${tdSt}"><span class="status-badge ${statusClass(s.status)}">${escapeHtml(statusLabel(s.status))}</span></td>
+        <td style="${tdSt}"><span class="match-flag ${m.cls}">${m.label}</span></td>
+        <td style="${tdSt}" class="mono">${cargaBreakdown(s)}</td>
+      </tr>`;
+    }).join('');
+    bodyHtml = `
+      <div class="detail-section-title">${siblings.length} períodos en esta campaña</div>
+      <div style="overflow-x:auto;margin-bottom:16px">
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead><tr>
+            <th style="${thSt}">Vigencia</th>
+            <th style="${thSt}">Estado</th>
+            <th style="${thSt}">Match</th>
+            <th style="${thSt}">Carga</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      ${codesHtml}`;
+  }
 
   document.getElementById('m-detailModalBody').innerHTML = `
     <div class="detail-header">
       <div class="detail-disc">${d.discountPct.toFixed(0)}%</div>
       <div class="detail-product" id="m-detailModalTitle">${escapeHtml(d.productName)}</div>
-      <div class="detail-maker-campaign">${escapeHtml(d.maker || 'Maker no especificado')} · ${escapeHtml(d.campaign)}</div>
+      <div class="detail-maker-campaign">${escapeHtml(d.maker||'Maker no especificado')} · ${escapeHtml(d.campaign)}</div>
     </div>
-    <div class="detail-body">
-      <div class="detail-grid">
-        <div class="detail-field">
-          <div class="detail-field-label">Estado de carga</div>
-          <div class="detail-field-val"><span class="status-badge ${statusClass(d.status)}">${escapeHtml(statusLabel(d.status))}</span></div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Match desc. vs. carga</div>
-          <div class="detail-field-val"><span class="match-flag ${m.cls}">${m.label}</span></div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Vigencia</div>
-          <div class="detail-field-val mono">${fmtDate(d.startDate)} → ${fmtDate(d.endDate)}</div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Carga (maker + turbo)</div>
-          <div class="detail-field-val mono">${cargaBreakdown(d)}</div>
-        </div>
-      </div>
-
-      <div class="detail-section-title">Códigos de identificación</div>
-      <div class="detail-codes">
-        <div class="detail-code-box">
-          <div class="detail-code-label">EAN</div>
-          <div class="detail-code-val">${escapeHtml(d.ean || '—')}</div>
-        </div>
-        <div class="detail-code-box">
-          <div class="detail-code-label">Sync</div>
-          <div class="detail-code-val">${escapeHtml(d.sync || '—')}</div>
-        </div>
-        <div class="detail-code-box">
-          <div class="detail-code-label">Content Portal ID</div>
-          <div class="detail-code-val">${escapeHtml(d.productId || '—')}</div>
-        </div>
-      </div>
-    </div>
+    <div class="detail-body">${bodyHtml}</div>
   `;
 
   const overlay = document.getElementById('m-detailOverlay');
