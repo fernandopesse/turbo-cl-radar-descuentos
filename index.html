@@ -6286,9 +6286,10 @@ for (const d of uniqueDeals.values()) {
     const [wkStartStr, wkEndStr] = wk.split('_');
     const wkStart = new Date(wkStartStr + 'T00:00:00');
     const wkEnd   = new Date(wkEndStr   + 'T23:59:59');
-    // Include deal in any week it's active (overlap)
-    if (dStart <= wkEnd && dEnd >= wkStart) {
+    // Only include if the deal both starts AND ends within this week
+    if (dStart >= wkStart && dStart <= wkEnd && dEnd >= wkStart && dEnd <= wkEnd) {
       dealsByStartWeek[wk].push(d);
+      break;
     }
   }
 }
