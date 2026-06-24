@@ -2723,6 +2723,12 @@ function fmtGmv(n){
   return '$' + Math.round(n).toLocaleString('es-CL');
 }
 
+// Peso = descuento% × GMV semanal base → ordena promos por impacto real en $
+function dealImpactScore(d){
+  const gmv = GMV_DATA[d.ean];
+  return gmv ? (d.discountPct / 100) * gmv : 0;
+}
+
 function cargaBreakdown(d){
   const parts = [];
   if(d.cargaMakerPct != null && d.cargaMakerPct !== 0) parts.push(`${d.cargaMakerPct.toFixed(0)}% maker`);
@@ -2760,7 +2766,7 @@ for (const d of uniqueDeals.values()) {
 }
 
 for (const wk of weekKeys) {
-  dealsByStartWeek[wk].sort((a, b) => b.discountPct - a.discountPct);
+  dealsByStartWeek[wk].sort((a, b) => dealImpactScore(b) - dealImpactScore(a));
   dealsByStartWeek[wk] = dealsByStartWeek[wk].slice(0, 5);
 }
 
@@ -2805,7 +2811,10 @@ function renderCalendar(){
           Inicia ${fmtDate(d.startDate)} → termina ${fmtDate(d.endDate)}
         </div>
         ${cargaBreakdown(d) !== '—' ? `<div class="promo-card-carga">${escapeHtml(cargaBreakdown(d))}</div>` : ''}
-        ${GMV_DATA[d.ean] ? `<div class="promo-card-gmv"><span class="gmv-badge base">GMV/sem ~${fmtGmv(GMV_DATA[d.ean])}</span></div>` : ''}
+        ${GMV_DATA[d.ean] ? `<div class="promo-card-gmv">
+          <span class="gmv-badge base">GMV/sem ~${fmtGmv(GMV_DATA[d.ean])}</span>
+          <span class="gmv-badge impact">Impacto ~${fmtGmv(dealImpactScore(d))}</span>
+        </div>` : ''}
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -2871,6 +2880,10 @@ function openDealDetail(d, rank){
         <div class="detail-field">
           <div class="detail-field-label">GMV semanal promedio (3m)</div>
           <div class="detail-field-val mono">${fmtGmv(GMV_DATA[d.ean])} CLP</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Impacto ponderado (desc × GMV)</div>
+          <div class="detail-field-val mono" style="color:var(--ok);font-weight:700;">${fmtGmv(dealImpactScore(d))} CLP</div>
         </div>` : ''}
       </div>
 
