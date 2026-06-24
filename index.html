@@ -1179,6 +1179,68 @@ footer{
   flex-direction: column;
   gap: 1px;
 }
+.cal-deal-card-body{
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.cal-deal-thumb{
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: var(--paper-dim);
+  flex-shrink: 0;
+  border: 1px solid var(--line-soft);
+}
+.cal-deal-thumb-placeholder{
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: var(--paper-dim);
+  flex-shrink: 0;
+  border: 1px solid var(--line-soft);
+}
+.cal-deal-content{ flex: 1; min-width: 0; }
+/* Modal image */
+.detail-product-img-wrap{
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-top: 12px;
+}
+.detail-product-img{
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.12);
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.detail-product-info{ flex: 1; min-width: 0; }
+.detail-img-actions{
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.detail-img-btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.detail-img-btn:hover{ opacity: 0.82; }
+.detail-img-btn.copy{ background: var(--turbo-yellow); color: var(--turbo-violet-deep); }
+.detail-img-btn.open{ background: rgba(255,255,255,0.18); color: white; }
 @media (max-width: 900px){
   .cal-grid{ grid-template-columns: repeat(2, 1fr); }
 }
@@ -2446,6 +2508,47 @@ const WMS_LABELS = {
   no_encontrado: '✕ No encontrado en WMS',
 };
 
+const EAN_IMAGES = {
+  '7610400068505':'https://images.rappi.cl/products/373960068726_sxicolxjulgz_491766225573_iicssedpsxbv_105400_1.png',
+  '7610400068529':'https://images.rappi.cl/products/93a730fd-cf2a-4eaf-b84f-96b44b3aa762.png',
+  '7790520014177':'https://images.rappi.cl/products/3e17e05d-1b25-4b7f-8ef3-e6a52d014bda.png',
+  '7798070860718':'https://images.rappi.cl/products/493417522415_zytbtihhibat_104883190402_pxuotkbwkpff_66051_1.jpeg',
+  '7798070860817':'https://images.rappi.cl/products/739436223989_takdrasreuqe_303779148747_htkmjkvnhtqo_96194_1.png',
+  '7798070860916':'https://images.rappi.cl/products/9e600198-6612-4305-a706-04585a92a1cf.png',
+  '7798070861043':'https://images.rappi.cl/products/fc8cd5f2-c327-4e02-b1b0-ca313f1b3893.png',
+  '7798070861166':'https://images.rappi.cl/products/732118316698_ajcuviffjxea_464358100877_ivkezspwbholar_575487_1.png',
+  '7801420001904':'https://images.rappi.cl/products/59353055-8396-498c-9324-365aeb6ee8df.jpg',
+  '7802337910235':'https://images.rappi.cl/products/2090057848-1608731205747.png',
+  '7802820048322':'https://images.rappi.cl/products/55c7f845-d719-49fd-bf52-4e5af5ebb519.png',
+  '7802820452129':'https://images.rappi.cl/products/ec5caa08-14d2-48ab-84dd-f48e72d5d5b2.png',
+  '7802820500035':'https://images.rappi.cl/products/98ec364d-5155-4233-8b4e-3ce321fc460b.png',
+  '7802820645859':'https://images.rappi.cl/products/785b00ff-6d05-4d5b-b1c3-fc9d04ff53af.png',
+  '7802820678017':'https://images.rappi.cl/products/cdd3fd16-cbbc-408f-b6e8-23a8df553e55.png',
+  '7802820678024':'https://images.rappi.cl/products/aa020f33-0fba-4891-bc1d-667f308b12dc.png',
+  '7802820678031':'https://images.rappi.cl/products/31da66d2-db8d-4c05-93b8-297e64719131.png',
+  '7802820678048':'https://images.rappi.cl/products/96a989d5-ebdd-401e-ae75-11aebe109573.png',
+  '7802820678055':'https://images.rappi.cl/products/24daf4ec-2ba2-43df-abce-c814baf6f4a4.png',
+  '7802820678062':'https://images.rappi.cl/products/9555f671-dc86-489a-a68a-496b14b83bff.png',
+  '7802820700435':'https://images.rappi.cl/products/3c78cc5c-32cc-45eb-b042-69fa3b22bdf4.png',
+  '7802820700633':'https://images.rappi.cl/products/c6c822a8-9ab8-4184-95a3-e2b156184d64.png',
+  '7804654890399':'https://images.rappi.cl/products/08adc465-dec6-4dad-ae32-0b5c894db80e.png',
+  '7804918450031':'https://images.rappi.cl/products/ef556c33-9360-4a65-99fd-c8c897303a7d.jpg',
+  '7806810003612':'https://images.rappi.cl/products/267506765175_wtwexwbyomig_783714578250_vmiayuezopgu_261655_1.jpeg',
+  '7806810004145':'https://images.rappi.cl/products/740119277671_wyfofymzinnc_689551000640_cpxzrgadbyqa_38780_1.png',
+  '7806810005050':'https://images.rappi.cl/products/5c0fe8ec-7a3d-4949-84ab-7fa59e5f5865.png',
+  '7806810007184':'https://images.rappi.cl/products/222023959403_wejfnaqincgk_635914780696_uksgfshrwuls_204205_1.jpeg',
+  '7806810007443':'https://images.rappi.cl/products/e9a187c5-f59d-4600-b875-480dd955c19b.jpg',
+  '7806810017442':'https://images.rappi.cl/products/46f0e4da-2096-4bb1-b1a7-c65c4df128a9.png',
+  '7806810024464':'https://images.rappi.cl/products/17b4187f-585b-40ce-a697-e4a9082af7c0.png',
+  '7806810800860':'https://images.rappi.cl/products/38279ce1-507d-46c1-8c8f-503a8de15467.png',
+  '7806810800877':'https://images.rappi.cl/products/85da2041-fb18-400b-8629-525513c8ed33.jpg',
+  '8003340807751':'https://images.rappi.cl/products/854aa428-de95-49a3-a430-ebcf62b9d2d1.png',
+  '8003340807775':'https://images.rappi.cl/products/31816161-762a-47a1-9df1-49c6851e1146.png',
+  '9002490100490':'https://images.rappi.cl/products/b2c7e5f5-4c0c-434f-9e27-19ed65ef2583.jpg',
+  '9002490200381':'https://images.rappi.cl/products/912f4db2-7b54-49fd-ab74-986764353f26.jpg',
+  '9002490232207':'https://images.rappi.cl/products/c05c6c43-45d6-4cc0-898b-f285ef38e9e5.jpg',
+};
+
 function escapeHtml(s){
   if(s == null) return '';
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -2514,17 +2617,25 @@ function renderCalendar(){
         : deals.map((d, i) => {
             const idx = calendarDeals.length;
             calendarDeals.push({deal: d, rank: i + 1});
+            const imgUrl = EAN_IMAGES[d.ean] || null;
             return `<div class="cal-deal-card" data-idx="${idx}" tabindex="0" role="button" aria-label="Ver detalle de ${escapeHtml(d.productName)}">
               <div class="cal-deal-top">
                 <span class="cal-deal-disc">${d.discountPct.toFixed(0)}%</span>
                 <span class="cal-deal-rank">#${i + 1}</span>
                 <span class="wms-dot ${escapeHtml(d.wmsStatus)}" title="${escapeHtml(WMS_LABELS[d.wmsStatus])}"></span>
               </div>
-              <div class="cal-deal-name">${escapeHtml(d.productName)}</div>
-              <div class="cal-deal-maker">${escapeHtml(d.maker || '—')}</div>
-              <div class="cal-deal-dates">
-                <span>Inicia ${fmtDate(d.startDate)}</span>
-                <span>→ termina ${fmtDate(d.endDate)}</span>
+              <div class="cal-deal-card-body">
+                ${imgUrl
+                  ? `<img class="cal-deal-thumb" src="${escapeHtml(imgUrl)}" alt="" loading="lazy">`
+                  : `<div class="cal-deal-thumb-placeholder"></div>`}
+                <div class="cal-deal-content">
+                  <div class="cal-deal-name">${escapeHtml(d.productName)}</div>
+                  <div class="cal-deal-maker">${escapeHtml(d.maker || '—')}</div>
+                  <div class="cal-deal-dates">
+                    <span>Inicia ${fmtDate(d.startDate)}</span>
+                    <span>→ termina ${fmtDate(d.endDate)}</span>
+                  </div>
+                </div>
               </div>
             </div>`;
           }).join('')
@@ -2544,14 +2655,25 @@ function renderCalendar(){
 renderCalendar();
 
 function openDealDetail(d, rank){
+  const imgUrl = EAN_IMAGES[d.ean] || null;
   document.getElementById('w-detailModalBody').innerHTML = `
     <div class="detail-header">
       <div class="detail-rank-disc">
         <div class="detail-disc">${d.discountPct.toFixed(0)}%</div>
         <div class="detail-rank-tag">#${rank} de la semana</div>
       </div>
-      <div class="detail-product" id="w-detailModalTitle">${escapeHtml(d.productName)}</div>
-      <div class="detail-maker-campaign">${escapeHtml(d.maker || 'Maker no especificado')} · ${escapeHtml(d.campaign)}</div>
+      <div class="detail-product-img-wrap">
+        ${imgUrl ? `<img class="detail-product-img" src="${escapeHtml(imgUrl)}" alt="${escapeHtml(d.productName)}">` : ''}
+        <div class="detail-product-info">
+          <div class="detail-product" id="w-detailModalTitle">${escapeHtml(d.productName)}</div>
+          <div class="detail-maker-campaign">${escapeHtml(d.maker || 'Maker no especificado')} · ${escapeHtml(d.campaign)}</div>
+          ${imgUrl ? `
+          <div class="detail-img-actions">
+            <button class="detail-img-btn copy" data-copy-url="${escapeHtml(imgUrl)}">📋 Copiar URL imagen</button>
+            <a class="detail-img-btn open" href="${escapeHtml(imgUrl)}" target="_blank" rel="noopener">↗ Abrir imagen</a>
+          </div>` : ''}
+        </div>
+      </div>
     </div>
     <div class="detail-body">
       <div class="detail-grid">
@@ -2599,6 +2721,16 @@ function openDealDetail(d, rank){
   overlay.classList.add('open');
   overlay.setAttribute('aria-hidden', 'false');
   document.getElementById('w-detailCloseBtn').focus();
+
+  document.getElementById('w-detailModalBody').querySelectorAll('.detail-img-btn.copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(btn.dataset.copyUrl).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copiado!';
+        setTimeout(() => { btn.textContent = orig; }, 1800);
+      });
+    });
+  });
 }
 
 function closeDealDetail(){
