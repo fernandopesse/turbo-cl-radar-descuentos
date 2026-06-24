@@ -6280,19 +6280,22 @@ const dealsByStartWeek = {};
 for (const wk of weekKeys) dealsByStartWeek[wk] = [];
 
 for (const d of uniqueDeals.values()) {
-  const dStart = new Date(d.startDate + 'T12:00:00');
+  const dStart = new Date(d.startDate + 'T00:00:00');
+  const dEnd   = d.endDate ? new Date(d.endDate + 'T23:59:59') : dStart;
   for (const wk of weekKeys) {
     const [wkStartStr, wkEndStr] = wk.split('_');
-    if (dStart >= new Date(wkStartStr + 'T00:00:00') && dStart <= new Date(wkEndStr + 'T23:59:59')) {
+    const wkStart = new Date(wkStartStr + 'T00:00:00');
+    const wkEnd   = new Date(wkEndStr   + 'T23:59:59');
+    // Include deal in any week it's active (overlap)
+    if (dStart <= wkEnd && dEnd >= wkStart) {
       dealsByStartWeek[wk].push(d);
-      break;
     }
   }
 }
 
 for (const wk of weekKeys) {
   dealsByStartWeek[wk].sort((a, b) => dealImpactScore(b) - dealImpactScore(a));
-  dealsByStartWeek[wk] = dealsByStartWeek[wk].slice(0, 5);
+  dealsByStartWeek[wk] = dealsByStartWeek[wk].slice(0, 10);
 }
 
 const container = document.getElementById('w-dealsContainer');
