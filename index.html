@@ -7174,10 +7174,11 @@ function buildCalendarFromData(records) {
 
   for (const d of uniqueDeals.values()) {
     const dStart = new Date(d.startDate + 'T00:00:00');
+    const dEnd   = d.endDate ? new Date(d.endDate + 'T23:59:59') : dStart;
     for (const wk of weekKeys) {
       const [s, e] = wk.split('_');
       const wkStart = new Date(s + 'T00:00:00'), wkEnd = new Date(e + 'T23:59:59');
-      if (dStart >= wkStart && dStart <= wkEnd) {
+      if (dStart >= wkStart && dStart <= wkEnd && dEnd >= wkStart && dEnd <= wkEnd) {
         dealsByStartWeek[wk].push(d);
         break;
       }
