@@ -7174,11 +7174,10 @@ function buildCalendarFromData(records) {
 
   for (const d of uniqueDeals.values()) {
     const dStart = new Date(d.startDate + 'T00:00:00');
-    const dEnd   = d.endDate ? new Date(d.endDate + 'T23:59:59') : dStart;
     for (const wk of weekKeys) {
       const [s, e] = wk.split('_');
       const wkStart = new Date(s + 'T00:00:00'), wkEnd = new Date(e + 'T23:59:59');
-      if (dStart >= wkStart && dStart <= wkEnd && dEnd >= wkStart && dEnd <= wkEnd) {
+      if (dStart >= wkStart && dStart <= wkEnd) {
         dealsByStartWeek[wk].push(d);
         break;
       }
@@ -7187,10 +7186,13 @@ function buildCalendarFromData(records) {
 
   for (const wk of weekKeys) {
     dealsByStartWeek[wk].sort((a, b) => dealImpactScore(b) - dealImpactScore(a));
-    dealsByStartWeek[wk] = dealsByStartWeek[wk].slice(0, 10);
+    dealsByStartWeek[wk] = dealsByStartWeek[wk].slice(0, 16);
   }
 
-  currentWeekIdx = 0;
+  // Default to current or nearest upcoming week
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  currentWeekIdx = weekKeys.findIndex(wk => new Date(wk.split('_')[1] + 'T23:59:59') >= today);
+  if (currentWeekIdx < 0) currentWeekIdx = weekKeys.length - 1;
   renderCalendar();
 }
 window.buildCalendarFromData = buildCalendarFromData;
