@@ -7240,10 +7240,6 @@ function renderCalendar(){
           <span class="gmv-badge base">GMV/sem ~${fmtGmv(GMV_DATA[d.ean])}</span>
           <span class="gmv-badge impact">Impacto ~${fmtGmv(dealImpactScore(d))}</span>
         </div>` : ''}
-        ${imgUrl ? `<div class="card-img-actions">
-          <button class="card-img-btn copy" data-copy-url="${escapeHtml(imgUrl)}">📋 Copiar URL</button>
-          <a class="card-img-btn open" href="${escapeHtml(imgUrl)}" target="_blank" rel="noopener">↗ Abrir</a>
-        </div>` : ''}
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -7254,15 +7250,6 @@ function renderCalendar(){
     const trigger = () => openDealDetail(deal, rank);
     card.addEventListener('click', trigger);
     card.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); trigger(); } });
-    card.querySelectorAll('.card-img-btn.copy').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        navigator.clipboard.writeText(btn.dataset.copyUrl).catch(() => {});
-      });
-    });
-    card.querySelectorAll('.card-img-btn.open').forEach(a => {
-      a.addEventListener('click', e => e.stopPropagation());
-    });
   });
 }
 
@@ -7274,7 +7261,7 @@ document.getElementById('w-nextWeek').addEventListener('click', () => {
 });
 
 function openDealDetail(d, rank){
-  const imgUrl = EAN_IMAGES[d.productId] || EAN_IMAGES[d.ean] || null;
+  const imgUrl = (window.SHEET_IMAGE_MAP && window.SHEET_IMAGE_MAP[String(d.productId)]) || EAN_IMAGES[d.productId] || null;
   document.getElementById('w-detailModalBody').innerHTML = `
     <div class="detail-header">
       <div class="detail-rank-disc">
